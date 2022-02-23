@@ -1,0 +1,50 @@
+{
+  "name": "mfspa-webpack",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./scripts/index.js --dev",
+    "build": "webpack --config ./config/webpack.prod.config.js --mode production",
+    "test2": "node test.js --production",
+    "build2": "node ./scripts/index.js --prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.17.2",
+    "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-es2015": "^7.0.0-beta.53",
+    "@babel/preset-react": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
+    "@babel/runtime": "^7.17.2",
+    "@types/react": "^17.0.39",
+    "@types/webpack-env": "^1.16.3",
+    "awesome-typescript-loader": "^5.2.1",
+    "babel-loader": "^8.2.3",
+    "css-loader": "^6.6.0",
+    "express": "^4.17.2",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "html-loader": "^3.1.0",
+    "html-webpack-plugin": "^5.5.0",
+    "less": "^4.1.2",
+    "less-loader": "^10.2.0",
+    "mime": "^3.0.0",
+    "mini-css-extract-plugin": "^2.5.3",
+    "style-loader": "^3.3.1",
+    "typescript": "^4.5.5",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-middleware": "^5.3.1",
+    "webpack-hot-middleware": "^2.25.1"
+  },
+  "dependencies": {
+    "antd": "^4.18.8",
+    "ejs": "^3.1.6",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
