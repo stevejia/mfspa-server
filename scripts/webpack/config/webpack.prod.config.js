@@ -1,5 +1,7 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const miniCssExtractPlugin = require("mini-css-extract-plugin");
+const EncodingPlugin = require("webpack-encoding-plugin");
+
 const path = require("path");
 const cwd = process.cwd();
 module.exports = {
@@ -38,6 +40,7 @@ module.exports = {
     new miniCssExtractPlugin({
       filename: "css/index.css",
     }),
+
     new HtmlWebpackPlugin({
       filename: "index.html",
       template: path.join(cwd, "public/index.html"),
@@ -47,6 +50,9 @@ module.exports = {
         removeComments: true,
         collapseWhitespace: false,
       },
+    }),
+    new EncodingPlugin({
+      encoding: "UTF-8",
     }),
   ],
 };

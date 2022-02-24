@@ -1,0 +1,15 @@
+node_modules
+.DS_Store
+.idea
+# dependencies
+**/node_modules
+**/build
+
+# production
+/dist
+/.vscode
+
+package-lock.json
+.temp/**
+node_modules/**
+yarn.lock

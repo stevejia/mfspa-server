@@ -90,7 +90,7 @@ class MfspaRouter extends React.Component<any, any> {
   render() {
     const { children } = this.props;
     const { loginStatus } = this.state;
-    return <div>router{children}</div>;
+    return <div>{children}</div>;
   }
 }
 
