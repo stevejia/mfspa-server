@@ -2,9 +2,9 @@ import Dep from "./dep";
 var addHistoryMethod = (function () {
   var historyDep = new Dep();
   return function (name: string) {
-    if (name === "historychange") {
+    if (name === "addHistorychange") {
       return function (name: string, fn: Function) {
-        historyDep.defined(name, fn);
+        historyDep.suscribe(name, fn);
         Dep.watch = null; //置空供下一个订阅者使用
       };
     } else if (name === "pushState" || name === "replaceState") {
@@ -13,12 +13,17 @@ var addHistoryMethod = (function () {
         method.apply(window.history, arguments as any);
         historyDep.notify();
       };
+    } else if (name === "removeHistorychange") {
+      return function (name: string, fn: Function) {
+        historyDep.unsuscribe(name, fn);
+      };
     }
   };
 })();
 
 const initHistoryMethod = () => {
-  (window as any).addHistoryListener = addHistoryMethod("historychange") as any;
+  window.addHistoryListener = addHistoryMethod("addHistorychange");
+  window.removeHistoryListener = addHistoryMethod("removeHistorychange");
   window.history.pushState = addHistoryMethod("pushState") as any;
   window.history.replaceState = addHistoryMethod("replaceState") as any;
 };

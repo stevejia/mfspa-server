@@ -8,7 +8,7 @@ const getEnv = () => {
     env = envCmd.split("--")[1];
   }
   console.log(env);
-  return "prod" || env;
+  return env;
 };
 
 module.exports = getEnv;

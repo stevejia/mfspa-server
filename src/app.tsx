@@ -1,5 +1,5 @@
 import { Layout } from "antd";
-import * as React from "react";
+import React from "react";
 const { Content, Footer, Header, Sider } = Layout;
 import MfspaLayout from "./mfspa/layout";
 class App extends React.Component {

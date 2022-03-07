@@ -43,6 +43,11 @@ app.all("*", (req, res, next) => {
     }
   }
 
+  if (req.method == "POST") {
+    res.header("Content-Type", "application/json");
+    rea.header("Accept", "application/json");
+  }
+
   next();
 });
 
@@ -65,6 +70,9 @@ app.get("*", (req, res, next) => {
     res.send(result);
     res.end();
   });
+});
+app.post("/api/v1/debugconfig/update", (req, res, next) => {
+  console.log(req, res);
 });
 app.listen(8077);
 console.log("listen on 8077");

@@ -10,7 +10,7 @@ class Dep {
     this.id = new Date(); //这里简单的运用时间戳作订阅池的ID
     this.subs = []; //该事件下被订阅对象的集合
   }
-  defined(name: string, fn: Function) {
+  suscribe(name: string, fn: Function) {
     if (!Dep.watch) {
       Dep.watch = new Watch(name, fn);
     }
@@ -18,6 +18,11 @@ class Dep {
     Dep.watch.add(this);
     Dep.watch = null;
   }
+
+  unsuscribe(name: string, fn: Function) {
+    this.subs = this.subs.filter((sub) => sub.fn !== fn && sub.name !== name);
+  }
+
   notify() {
     //通知订阅者有变化
     this.subs.forEach((e, i) => {
