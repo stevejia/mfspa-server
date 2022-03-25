@@ -1,4 +1,4 @@
-import { clone } from "../utils";
+import { clone, isNullOrEmpty } from "../utils";
 import MfspaRouter from "./router";
 import "./router/listener/historyChangeHandler";
 interface MfspaOption {
@@ -17,6 +17,27 @@ class Mfspa {
     // }
     // this.router = new MfspaRouter();
     this.start();
+  }
+
+  private handlers = {};
+
+  on(eventType: "message", handler: (data: any) => void): void {
+    if (isNullOrEmpty(this.handlers[eventType])) {
+      this.handlers[eventType] = [];
+    }
+    this.handlers[eventType].push(handler);
+  }
+  trigger(event) {
+    if (!event.target) {
+      event.target = this;
+    }
+    const { type } = event;
+    const handlers = this.handlers[type];
+    if (handlers instanceof Array) {
+      handlers?.forEach((handler) => {
+        handler(event);
+      });
+    }
   }
 
   private snapshotVariables() {

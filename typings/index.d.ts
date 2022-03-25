@@ -1,5 +1,7 @@
+import Mfspa from "../src/mfspa";
+
 interface Window {
-  mfspa: any;
+  mfspa: Mfspa;
   addHistoryListener: any;
   removeHistoryListener: (name: string, fn: Function) => void;
 }

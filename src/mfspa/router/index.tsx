@@ -1,16 +1,26 @@
 import * as React from "react";
 import mfspaConfig from "../../../mfspa.config";
-
+import DebugMode from "../../components/debug-mode";
+import RenderInBody from "../../components/render-in-body";
+import request from "../../request/request";
 class MfspaRouter extends React.Component<any, any> {
   private appInstances: Array<string> = [];
   state = {
     loginStatus: false,
+    currentAppName: "",
+    debugApps: [],
   };
+  private _debugApps = [];
   componentDidMount(): void {
     this.mounted();
   }
 
-  mounted() {
+  async mounted() {
+    const { debugApps } = await request.get(
+      "http://localhost:8044/api/v1/debugconfig/get"
+    );
+    this._debugApps = debugApps;
+    this.setState({ debugApps });
     (window as any).addHistoryListener("change", () => {
       console.log("changed");
       //check login status;
@@ -42,6 +52,7 @@ class MfspaRouter extends React.Component<any, any> {
   private getAppName(path: string): string {
     const pattern = mfspaConfig.pattern || "app/";
     const appName = path?.split(pattern)?.[1]?.split("/")?.[0] || null;
+    this.setState({ currentAppName: appName });
     return appName;
   }
 
@@ -62,13 +73,14 @@ class MfspaRouter extends React.Component<any, any> {
 
   private async loadApp(appName: string) {
     const appInfo = await this.getAppInfo(appName);
-
     let src = `${mfspaConfig.cdn}app/${appName}/${appInfo.version}/${appInfo.entry}`;
-
-    if (appName === "testA") {
-      src = "http://localhost:8055/webpack/dist/index.js";
+    if (this.currentAppInDebug()) {
+      const appDebugInfo = this.getAppDebugInfo(appName);
+      if (appDebugInfo) {
+        const { url } = appDebugInfo;
+        src = url;
+      }
     }
-
     const script = document.createElement("script");
     script.src = src;
     document.querySelector("body").appendChild(script);
@@ -85,12 +97,44 @@ class MfspaRouter extends React.Component<any, any> {
     });
   }
 
-  unmounted() {}
+  private currentAppInDebug = () => {
+    const { _debugApps } = this;
+    const { currentAppName } = this.state;
+    return _debugApps?.some((da) => da.appName === currentAppName);
+  };
+
+  private getAppDebugInfo = (appName: string) => {
+    const { _debugApps } = this;
+    const appDebugInfo = _debugApps.find((app) => app.appName === appName);
+    return appDebugInfo;
+  };
+
+  private quitDebug = () => {
+    this.reload();
+  };
+
+  reload() {
+    window.location.reload();
+  }
 
   render() {
     const { children } = this.props;
-    const { loginStatus } = this.state;
-    return <div>{children}</div>;
+
+    const { loginStatus, currentAppName, debugApps } = this.state;
+    const curAppInDebug = this.currentAppInDebug();
+    return (
+      <>
+        {debugApps?.length > 0 && curAppInDebug && (
+          <RenderInBody>
+            <DebugMode
+              quitDebug={this.quitDebug}
+              currentAppName={currentAppName}
+            ></DebugMode>
+          </RenderInBody>
+        )}
+        <div>{children}</div>
+      </>
+    );
   }
 }
 

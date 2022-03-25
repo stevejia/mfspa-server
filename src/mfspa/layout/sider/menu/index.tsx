@@ -21,8 +21,127 @@ interface MfspaMenuProps {
 }
 
 class MfspaMenu extends React.Component<MfspaMenuProps, any> {
+  state = {
+    mockMenus: [],
+    selectedKeys: [],
+    openKeys: [],
+  };
+  componentDidMount() {
+    (window as any).addHistoryListener("historyChange", () => {
+      console.log("menu: history change");
+      const pathname = window.location.pathname;
+      const { mockMenus } = this.state;
+      const { selectedKeys, openKeys } = this.getSelectedAndOpenMenuKey(
+        mockMenus,
+        pathname
+      );
+      this.setState({ selectedKeys, openKeys });
+    });
+    (window as any).mfspa.on("getMockMenu", (event) => {
+      console.log(event);
+      const {
+        data: { mockMenus = [] },
+      } = event;
+      this.setState({ mockMenus });
+    });
+  }
+
+  private getSelectedAndOpenMenuKey(menus, pathname) {
+    let selectedKeys = [];
+    let openKeys = [];
+    for (let i = 0; i < menus.length; i++) {
+      const menu = menus[i];
+      const { key, subMenus } = menu;
+      let isMatched = this.isMenuMatched(menu, pathname);
+      if (isMatched) {
+        selectedKeys = [key];
+        break;
+      }
+      for (let j = 0; j < subMenus?.length; j++) {
+        const subMenu = subMenus[j];
+        const { skey } = subMenu;
+        isMatched = this.isMenuMatched(menu, pathname, subMenu);
+        if (isMatched) {
+          selectedKeys = [skey];
+          openKeys = [key];
+        }
+      }
+    }
+    return { selectedKeys, openKeys };
+  }
+
+  private isMenuMatched(menu, pathname, subMenu = null) {
+    const { url, relatedUrls } = menu;
+    let matched = false;
+    if (!subMenu) {
+      if (url === pathname || relatedUrls?.indexOf(pathname) !== -1) {
+        return true;
+      }
+    }
+    const { skey, surl, srelatedUrls } = subMenu;
+    if (surl === pathname || srelatedUrls?.indexOf(pathname) !== -1) {
+      return true;
+    }
+    return false;
+  }
+
+  renderMenus() {
+    const { mockMenus, selectedKeys, openKeys } = this.state;
+    if (mockMenus.length <= 0) {
+      return;
+    }
+    const [firstMenu] = mockMenus;
+    let defaultSelectedKeys = [firstMenu.key];
+    let defaultOpenKeys = [];
+    if (firstMenu.subMenus && firstMenu.subMenus.length > 0) {
+      defaultOpenKeys = firstMenu.key;
+      const [firstSubMenu] = firstMenu.subMenus;
+      defaultSelectedKeys = [firstSubMenu.key];
+    }
+    debugger;
+
+    if (selectedKeys?.length > 0) {
+      defaultSelectedKeys = selectedKeys;
+    }
+
+    if (openKeys?.length > 0) {
+      defaultOpenKeys = openKeys;
+    }
+
+    const mockMenusDom = (
+      <Menu
+        defaultSelectedKeys={defaultSelectedKeys}
+        defaultOpenKeys={defaultOpenKeys}
+        // selectedKeys={selectedKeys}
+        // openKeys={openKeys}
+        mode="inline"
+        theme="dark"
+      >
+        {mockMenus.map((menu) => {
+          const { subMenus } = menu;
+          if (!subMenus || subMenus.length === 0) {
+            return (
+              <Menu.Item key={menu.key} onClick={() => console.log(menu.url)}>
+                {menu.name}
+              </Menu.Item>
+            );
+          }
+          return (
+            <SubMenu key={menu.key} title={menu.name}>
+              {subMenus.map((subMenu) => (
+                <Menu.Item key={subMenu.key}>{subMenu.name}</Menu.Item>
+              ))}
+            </SubMenu>
+          );
+        })}
+      </Menu>
+    );
+    return mockMenusDom;
+  }
+
   render() {
     const { collapsed } = this.props;
+    const { mockMenus } = this.state;
     return (
       <div className="mfspa-menu">
         <Menu
@@ -59,6 +178,7 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
             </SubMenu>
           </SubMenu>
         </Menu>
+        {this.renderMenus()}
       </div>
     );
   }

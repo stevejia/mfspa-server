@@ -1,8 +1,9 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const miniCssExtractPlugin = require("mini-css-extract-plugin");
-const EncodingPlugin = require("webpack-encoding-plugin");
-
+// const EncodingPlugin = require("webpack-encoding-plugin");
+// const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const path = require("path");
+const Webpackbar = require("webpackbar");
 const cwd = process.cwd();
 module.exports = {
   entry: [path.join(cwd, "src/index.js")],
@@ -37,6 +38,7 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".css", ".html"],
   },
   plugins: [
+    new Webpackbar(),
     new miniCssExtractPlugin({
       filename: "css/index.css",
     }),
@@ -51,8 +53,11 @@ module.exports = {
         collapseWhitespace: false,
       },
     }),
-    new EncodingPlugin({
-      encoding: "UTF-8",
-    }),
+    // new EncodingPlugin({
+    //   encoding: "utf-8",
+    // }),
   ],
+  // optimization: {
+  //   minimizer: [new UglifyJsPlugin()],
+  // },
 };
