@@ -3,6 +3,7 @@ import mfspaConfig from "../../../mfspa.config";
 import DebugMode from "../../components/debug-mode";
 import RenderInBody from "../../components/render-in-body";
 import request from "../../request/request";
+import config from "../../../mfspa.config";
 class MfspaRouter extends React.Component<any, any> {
   private appInstances: Array<string> = [];
   state = {
@@ -16,9 +17,10 @@ class MfspaRouter extends React.Component<any, any> {
   }
 
   async mounted() {
-    const { debugApps } = await request.get(
-      "http://localhost:8044/api/v1/debugconfig/get"
-    );
+    const {
+      data: { debugInfo: debugApps },
+    } = await request.get(`${config.nodeHost}api/v1/debuginfo/get`);
+    console.log(debugApps);
     this._debugApps = debugApps;
     this.setState({ debugApps });
     (window as any).addHistoryListener("change", () => {

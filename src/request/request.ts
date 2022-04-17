@@ -19,8 +19,16 @@ class MfspaRequest {
         case "GET":
           const urlWithQuery = getQueryString(url, params);
           const res = await fetch(urlWithQuery);
-          console.log(res);
-          resolve(res.json());
+          let result = null;
+          result = await res
+            .clone()
+            .json()
+            .catch(async (e) => {
+              console.log(e);
+              result = await res.clone().arrayBuffer();
+            });
+          console.log(result);
+          resolve(result);
           break;
         case "DELETE":
           const resDel = await fetch(url, {

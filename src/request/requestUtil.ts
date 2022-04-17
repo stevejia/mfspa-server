@@ -14,7 +14,7 @@ export const parseQueryString = (url) => {
   return ret;
 };
 export const getQueryString = (url, paramsObject) => {
-  let urlWithQuery = "";
+  let urlWithQuery = url;
   const params = tileParams(paramsObject) || {};
   const queryStr = Object.keys(params)
     .map((key) => {
@@ -22,10 +22,12 @@ export const getQueryString = (url, paramsObject) => {
     })
     .join("&");
   const hasParam = url.indexOf("?") > -1;
-  if (hasParam) {
-    urlWithQuery = url + queryStr;
-  } else {
-    urlWithQuery = url + "?" + queryStr;
+  if (!!queryStr) {
+    if (hasParam) {
+      urlWithQuery += queryStr;
+    } else {
+      urlWithQuery += "?" + queryStr;
+    }
   }
   return urlWithQuery;
 };

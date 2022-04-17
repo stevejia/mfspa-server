@@ -98,7 +98,6 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       const [firstSubMenu] = firstMenu.subMenus;
       defaultSelectedKeys = [firstSubMenu.key];
     }
-    debugger;
 
     if (selectedKeys?.length > 0) {
       defaultSelectedKeys = selectedKeys;
