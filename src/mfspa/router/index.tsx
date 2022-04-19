@@ -4,6 +4,7 @@ import DebugMode from "../../components/debug-mode";
 import RenderInBody from "../../components/render-in-body";
 import request from "../../request/request";
 import config from "../../../mfspa.config";
+import { Modal } from "antd";
 class MfspaRouter extends React.Component<any, any> {
   private appInstances: Array<string> = [];
   state = {
@@ -75,12 +76,22 @@ class MfspaRouter extends React.Component<any, any> {
 
   private async loadApp(appName: string) {
     const appInfo = await this.getAppInfo(appName);
-    let src = `${mfspaConfig.cdn}app/${appName}/${appInfo.version}/${appInfo.entry}`;
+
+    let src = appInfo.url;
     if (this.currentAppInDebug()) {
       const appDebugInfo = this.getAppDebugInfo(appName);
       if (appDebugInfo) {
         const { url } = appDebugInfo;
         src = url;
+
+        let hasError = false;
+        await request.get(src).catch((e) => {
+          hasError = true;
+        });
+        if (hasError) {
+          Modal.error({ content: `请本地开启${appName}的调试模式` });
+          return;
+        }
       }
     }
     const script = document.createElement("script");
@@ -90,13 +101,14 @@ class MfspaRouter extends React.Component<any, any> {
   }
 
   private async getAppInfo(appName: string): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      resolve({
-        name: appName,
-        version: "@1.0.0",
-        entry: "index.js",
-      });
+    const {
+      data: { appInfo },
+    } = await request.get(`${config.nodeHost}api/v1/appinfo/get`, {
+      appName,
+      currentUsed: 1,
     });
+    console.log(appInfo);
+    return appInfo;
   }
 
   private currentAppInDebug = () => {
