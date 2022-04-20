@@ -2,13 +2,15 @@ import { Modal } from "antd";
 import React from "react";
 import request from "../../request/request";
 import "./index.less";
+
+import config from "../../../mfspa.config";
 export default class DebugMode extends React.Component<any, any> {
   private quitDebug = () => {
     const { currentAppName, quitDebug } = this.props;
     Modal.confirm({
       content: "确认退出调试模式？",
       async onOk() {
-        await request.del("http://localhost:8044/api/v1/debugconfig/delete", {
+        await request.del(`${config.nodeHost}api/v1/debuginfo/delete`, {
           appName: currentAppName,
         });
         console.log("delete success");

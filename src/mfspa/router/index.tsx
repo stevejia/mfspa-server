@@ -5,12 +5,14 @@ import RenderInBody from "../../components/render-in-body";
 import request from "../../request/request";
 import config from "../../../mfspa.config";
 import { Modal } from "antd";
+import "./index.less";
 class MfspaRouter extends React.Component<any, any> {
   private appInstances: Array<string> = [];
   state = {
     loginStatus: false,
     currentAppName: "",
     debugApps: [],
+    notFound: false,
   };
   private _debugApps = [];
   componentDidMount(): void {
@@ -77,7 +79,7 @@ class MfspaRouter extends React.Component<any, any> {
   private async loadApp(appName: string) {
     const appInfo = await this.getAppInfo(appName);
 
-    let src = appInfo.url;
+    let src = appInfo?.url;
     if (this.currentAppInDebug()) {
       const appDebugInfo = this.getAppDebugInfo(appName);
       if (appDebugInfo) {
@@ -93,6 +95,10 @@ class MfspaRouter extends React.Component<any, any> {
           return;
         }
       }
+    }
+    if (!src) {
+      this.setState({ notFound: true });
+      return;
     }
     const script = document.createElement("script");
     script.src = src;
@@ -134,7 +140,7 @@ class MfspaRouter extends React.Component<any, any> {
   render() {
     const { children } = this.props;
 
-    const { loginStatus, currentAppName, debugApps } = this.state;
+    const { loginStatus, currentAppName, debugApps, notFound } = this.state;
     const curAppInDebug = this.currentAppInDebug();
     return (
       <>
@@ -146,7 +152,11 @@ class MfspaRouter extends React.Component<any, any> {
             ></DebugMode>
           </RenderInBody>
         )}
-        <div>{children}</div>
+        {notFound ? (
+          <div className="mfspa-not-found-wrapper">page not found</div>
+        ) : (
+          <div>{children}</div>
+        )}
       </>
     );
   }

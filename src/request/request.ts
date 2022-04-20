@@ -32,10 +32,9 @@ class MfspaRequest {
             resolve(result);
             break;
           case "DELETE":
-            const resDel = await fetch(url, {
+            const urlWithDelQuery = getQueryString(url, params);
+            const resDel = await fetch(urlWithDelQuery, {
               method,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(params),
             });
             resolve(resDel.json());
             break;
