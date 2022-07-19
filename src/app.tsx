@@ -7,11 +7,12 @@ import MfspaLayout from "./mfspa/layout";
 class App extends React.Component {
   render() {
     return (
-      <MfspaLayout>
-        {/* <div id="mfspa-root" className="mfspa-content"></div> */}
-        {/* <QNRtcPlayerDemo></QNRtcPlayerDemo> */}
-        <QNPlayerDemo></QNPlayerDemo>
-      </MfspaLayout>
+      // <MfspaLayout>
+      //   {/* <div id="mfspa-root" className="mfspa-content"></div> */}
+      //   {/* <QNRtcPlayerDemo></QNRtcPlayerDemo> */}
+      //   <QNPlayerDemo></QNPlayerDemo>
+      // </MfspaLayout>
+      <QNPlayerDemo></QNPlayerDemo>
     );
   }
 }
