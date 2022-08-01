@@ -139,11 +139,9 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
   }
 
   render() {
-    const { collapsed } = this.props;
-    const { mockMenus } = this.state;
     return (
       <div className="mfspa-menu">
-        <Menu
+        {/* <Menu
           defaultSelectedKeys={["1"]}
           defaultOpenKeys={["sub1"]}
           mode="inline"
@@ -176,7 +174,7 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
               <Menu.Item key="12">Option 12</Menu.Item>
             </SubMenu>
           </SubMenu>
-        </Menu>
+        </Menu> */}
         {this.renderMenus()}
       </div>
     );

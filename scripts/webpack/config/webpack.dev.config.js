@@ -55,5 +55,5 @@ module.exports = {
     }),
     new webpack.HotModuleReplacementPlugin(),
   ],
-  devtool: "source-map",
+  devtool: "eval-source-map",
 };
