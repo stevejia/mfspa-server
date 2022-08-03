@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const miniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 const cwd = process.cwd();
+const Webpackbar = require("webpackbar");
 module.exports = {
   entry: [
     "webpack/hot/dev-server",
@@ -40,6 +41,7 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".css", ".html"],
   },
   plugins: [
+    new Webpackbar(),
     new miniCssExtractPlugin({
       filename: "css/index.css",
     }),

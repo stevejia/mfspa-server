@@ -6,7 +6,7 @@ const hotMiddleware = require("webpack-hot-middleware");
 const mime = require("mime");
 const compiler = webpack(webpackConfig);
 const getEnv = require("../tools/getEnv");
-
+const duration = 1000;
 const start = () => {
   const env = getEnv();
   const path = require("path");
@@ -60,9 +60,30 @@ const start = () => {
       res.end();
     });
   });
-  app.listen(8077);
-  console.clear();
-  console.log("listen on 8077");
+
+  compilerDone(() => {
+    console.clear();
+    app.listen(8077, () => {
+      console.log("server started on http://localhost:8077");
+    });
+  });
+};
+
+const compilerDone = (callback) => {
+  compiler.hooks.done.tap("done", (stats) => {
+    if (
+      stats.compilation.errors &&
+      stats.compilation.errors.length &&
+      env !== "dev"
+    ) {
+      console.error(stats.compilation.errors);
+      process.exit(1);
+    }
+    console.log("build sucess");
+    setTimeout(() => {
+      callback && callback();
+    }, duration);
+  });
 };
 
 module.exports = start;

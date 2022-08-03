@@ -1,16 +1,16 @@
 import * as React from "react";
 import { Menu, Button } from "antd";
-import {
-  AppstoreOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
-  PieChartOutlined,
-  DesktopOutlined,
-  ContainerOutlined,
-  MailOutlined,
-  LeftOutlined,
-  RightOutlined,
-} from "@ant-design/icons";
+// import {
+//   AppstoreOutlined,
+//   MenuUnfoldOutlined,
+//   MenuFoldOutlined,
+//   PieChartOutlined,
+//   DesktopOutlined,
+//   ContainerOutlined,
+//   MailOutlined,
+//   LeftOutlined,
+//   RightOutlined,
+// } from "@ant-design/icons";
 
 import "./index.less";
 
@@ -120,7 +120,12 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
           const { subMenus } = menu;
           if (!subMenus || subMenus.length === 0) {
             return (
-              <Menu.Item key={menu.key} onClick={() => console.log(menu.url)}>
+              <Menu.Item
+                key={menu.key}
+                onClick={() =>
+                  window.history.pushState({ path: menu.url }, "", menu.url)
+                }
+              >
                 {menu.name}
               </Menu.Item>
             );
@@ -128,7 +133,14 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
           return (
             <SubMenu key={menu.key} title={menu.name}>
               {subMenus.map((subMenu) => (
-                <Menu.Item key={subMenu.key}>{subMenu.name}</Menu.Item>
+                <Menu.Item
+                  key={subMenu.key}
+                  onClick={() =>
+                    window.history.pushState({ path: menu.url }, "", menu.url)
+                  }
+                >
+                  {subMenu.name}
+                </Menu.Item>
               ))}
             </SubMenu>
           );

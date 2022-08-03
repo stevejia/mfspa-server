@@ -155,7 +155,7 @@ class MfspaRouter extends React.Component<any, any> {
         {notFound ? (
           <div className="mfspa-not-found-wrapper">page not found</div>
         ) : (
-          <div>{children}</div>
+          children
         )}
       </>
     );

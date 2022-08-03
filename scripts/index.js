@@ -10,7 +10,6 @@ const getEnv = require("./tools/getEnv");
 const start = require("./tools/start");
 const build = require("./tools/build");
 const env = getEnv();
-console.log(env);
 if (env !== "dev") {
   build();
 } else {
