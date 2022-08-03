@@ -60,12 +60,14 @@ const start = () => {
       res.end();
     });
   });
+  let listenResult = "";
+  app.listen(8077, () => {
+    listenResult = "server started on http://localhost:8077";
+  });
 
   compilerDone(() => {
     console.clear();
-    app.listen(8077, () => {
-      console.log("server started on http://localhost:8077");
-    });
+    console.log(listenResult);
   });
 };
 

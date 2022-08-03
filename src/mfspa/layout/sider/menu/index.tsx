@@ -27,9 +27,10 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
     openKeys: [],
   };
   componentDidMount() {
+    const pathname = window.location.pathname;
     (window as any).addHistoryListener("historyChange", () => {
       console.log("menu: history change");
-      const pathname = window.location.pathname;
+
       const { mockMenus } = this.state;
       const { selectedKeys, openKeys } = this.getSelectedAndOpenMenuKey(
         mockMenus,
@@ -42,7 +43,11 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       const {
         data: { mockMenus = [] },
       } = event;
-      this.setState({ mockMenus });
+      const { selectedKeys, openKeys } = this.getSelectedAndOpenMenuKey(
+        mockMenus,
+        pathname
+      );
+      this.setState({ mockMenus, selectedKeys, openKeys });
     });
   }
 
@@ -59,7 +64,7 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       }
       for (let j = 0; j < subMenus?.length; j++) {
         const subMenu = subMenus[j];
-        const { skey } = subMenu;
+        const { key: skey } = subMenu;
         isMatched = this.isMenuMatched(menu, pathname, subMenu);
         if (isMatched) {
           selectedKeys = [skey];
@@ -71,15 +76,15 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
   }
 
   private isMenuMatched(menu, pathname, subMenu = null) {
-    const { url, relatedUrls } = menu;
-    let matched = false;
+    const { urls } = menu;
     if (!subMenu) {
-      if (url === pathname || relatedUrls?.indexOf(pathname) !== -1) {
+      if (urls?.indexOf(pathname) > -1) {
         return true;
       }
+      return false;
     }
-    const { skey, surl, srelatedUrls } = subMenu;
-    if (surl === pathname || srelatedUrls?.indexOf(pathname) !== -1) {
+    const { urls: surls } = subMenu;
+    if (surls?.indexOf(pathname) > -1) {
       return true;
     }
     return false;
@@ -136,7 +141,11 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
                 <Menu.Item
                   key={subMenu.key}
                   onClick={() =>
-                    window.history.pushState({ path: menu.url }, "", menu.url)
+                    window.history.pushState(
+                      { path: subMenu.url },
+                      "",
+                      subMenu.url
+                    )
                   }
                 >
                   {subMenu.name}
