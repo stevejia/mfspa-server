@@ -51,25 +51,26 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       const {
         data: { menuList },
       } = await request.get(`${config.nodeHost}api/v1/menuinfo/getmenus`);
-      menuList.forEach((menu) => {
-        menu.url = menu.url?.replace(
-          "http://www.mfspa.cc",
-          "http://localhost:8077"
-        );
-        menu.relatedUrls = menu.relatedUrls?.map((url) => {
-          return url.replace("http://www.mfspa.cc", "http://localhost:8077");
-        });
+      // 本地菜单调试处理代码
+      // menuList.forEach((menu) => {
+      //   menu.url = menu.url?.replace(
+      //     "http://www.mfspa.cc",
+      //     "http://localhost:8077"
+      //   );
+      //   menu.relatedUrls = menu.relatedUrls?.map((url) => {
+      //     return url.replace("http://www.mfspa.cc", "http://localhost:8077");
+      //   });
 
-        menu.subMenus.forEach((subMenu) => {
-          subMenu.url = subMenu.url?.replace(
-            "http://www.mfspa.cc",
-            "http://localhost:8077"
-          );
-          subMenu.relatedUrls = subMenu.relatedUrls?.map((url) => {
-            return url.replace("http://www.mfspa.cc", "http://localhost:8077");
-          });
-        });
-      });
+      //   menu.subMenus.forEach((subMenu) => {
+      //     subMenu.url = subMenu.url?.replace(
+      //       "http://www.mfspa.cc",
+      //       "http://localhost:8077"
+      //     );
+      //     subMenu.relatedUrls = subMenu.relatedUrls?.map((url) => {
+      //       return url.replace("http://www.mfspa.cc", "http://localhost:8077");
+      //     });
+      //   });
+      // });
       console.log(menuList);
       this.setState({ menus: menuList }, () => {
         resolve(menuList);
