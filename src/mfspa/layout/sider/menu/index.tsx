@@ -13,7 +13,8 @@ import { Menu, Button } from "antd";
 // } from "@ant-design/icons";
 
 import "./index.less";
-
+import request from "../../../../request/request";
+import config from "../../../../../mfspa.config";
 const { SubMenu } = Menu;
 
 interface MfspaMenuProps {
@@ -25,33 +26,75 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
     mockMenus: [],
     selectedKeys: [],
     openKeys: [],
+    menus: [],
   };
-  componentDidMount() {
+
+  async componentDidMount() {
+    const menus = await this.getMenus();
     const pathname = window.location.pathname;
     (window as any).addHistoryListener("historyChange", () => {
       console.log("menu: history change");
-
       const { mockMenus } = this.state;
-      const { selectedKeys, openKeys } = this.getSelectedAndOpenMenuKey(
-        mockMenus,
-        pathname
-      );
-      this.setState({ selectedKeys, openKeys });
+      this.initSelctedMenus(pathname, mockMenus, menus);
     });
     (window as any).mfspa.on("getMockMenu", (event) => {
       console.log(event);
       const {
         data: { mockMenus = [] },
       } = event;
-      const { selectedKeys, openKeys } = this.getSelectedAndOpenMenuKey(
-        mockMenus,
-        pathname
-      );
-      this.setState({ mockMenus, selectedKeys, openKeys });
+      this.initSelctedMenus(pathname, mockMenus, menus);
     });
   }
 
-  private getSelectedAndOpenMenuKey(menus, pathname) {
+  private getMenus(): Promise<any> {
+    return new Promise(async (resolve, reject): Promise<any> => {
+      const {
+        data: { menuList },
+      } = await request.get(`${config.nodeHost}api/v1/menuinfo/getmenus`);
+      menuList.forEach((menu) => {
+        menu.url = menu.url?.replace(
+          "http://www.mfspa.cc",
+          "http://localhost:8077"
+        );
+        menu.relatedUrls = menu.relatedUrls?.map((url) => {
+          return url.replace("http://www.mfspa.cc", "http://localhost:8077");
+        });
+
+        menu.subMenus.forEach((subMenu) => {
+          subMenu.url = subMenu.url?.replace(
+            "http://www.mfspa.cc",
+            "http://localhost:8077"
+          );
+          subMenu.relatedUrls = subMenu.relatedUrls?.map((url) => {
+            return url.replace("http://www.mfspa.cc", "http://localhost:8077");
+          });
+        });
+      });
+      console.log(menuList);
+      this.setState({ menus: menuList }, () => {
+        resolve(menuList);
+      });
+    });
+  }
+
+  private initSelctedMenus(
+    pathname: string,
+    mockMenus: Array<any>,
+    menus: Array<any>
+  ) {
+    const { selectedKeys, openKeys } = this.getSelectedAndOpenMenuKey(
+      mockMenus,
+      pathname,
+      menus
+    );
+    this.setState({ mockMenus, selectedKeys, openKeys });
+  }
+
+  private getSelectedAndOpenMenuKey(mockMenus, pathname, menus) {
+    //如果有mockMenus
+    if (!!mockMenus?.length) {
+      menus = mockMenus;
+    }
     let selectedKeys = [];
     let openKeys = [];
     for (let i = 0; i < menus.length; i++) {
@@ -76,26 +119,41 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
   }
 
   private isMenuMatched(menu, pathname, subMenu = null) {
-    const { urls } = menu;
+    const { url, relatedUrls = [] } = menu;
+    const urls = [url, ...relatedUrls];
     if (!subMenu) {
-      if (urls?.indexOf(pathname) > -1) {
+      if (this.mathPathname(urls, pathname)) {
         return true;
       }
       return false;
     }
-    const { urls: surls } = subMenu;
-    if (surls?.indexOf(pathname) > -1) {
+    const { url: surl, relatedUrls: sRelatedUrls = [] } = subMenu;
+    const surls = [surl, ...sRelatedUrls];
+    if (this.mathPathname(surls, pathname)) {
       return true;
     }
     return false;
   }
 
+  private mathPathname(urls: string[], pathname: string) {
+    return urls.some((url) => {
+      return url?.indexOf(pathname) > -1;
+    });
+  }
+
   renderMenus() {
-    const { mockMenus, selectedKeys, openKeys } = this.state;
-    if (mockMenus.length <= 0) {
-      return;
+    const { mockMenus, selectedKeys = [], openKeys = [], menus } = this.state;
+
+    let mfspaMenus = menus;
+
+    if (!!mockMenus.length) {
+      mfspaMenus = mockMenus;
     }
-    const [firstMenu] = mockMenus;
+
+    if (mfspaMenus.length <= 0) {
+      return null;
+    }
+    const [firstMenu] = mfspaMenus;
     let defaultSelectedKeys = [firstMenu.key];
     let defaultOpenKeys = [];
     if (firstMenu.subMenus && firstMenu.subMenus.length > 0) {
@@ -112,24 +170,30 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       defaultOpenKeys = openKeys;
     }
 
-    const mockMenusDom = (
+    const mfspaMenusDom = (
       <Menu
-        defaultSelectedKeys={defaultSelectedKeys}
-        defaultOpenKeys={defaultOpenKeys}
-        // selectedKeys={selectedKeys}
-        // openKeys={openKeys}
+        // defaultSelectedKeys={defaultSelectedKeys}
+        // defaultOpenKeys={defaultOpenKeys}
+        selectedKeys={selectedKeys}
+        openKeys={openKeys}
         mode="inline"
         theme="dark"
       >
-        {mockMenus.map((menu) => {
+        {mfspaMenus.map((menu) => {
           const { subMenus } = menu;
           if (!subMenus || subMenus.length === 0) {
             return (
               <Menu.Item
                 key={menu.key}
-                onClick={() =>
-                  window.history.pushState({ path: menu.url }, "", menu.url)
-                }
+                onClick={(info) => {
+                  window.history.pushState({ path: menu.url }, "", menu.url);
+                  const { keyPath } = info;
+                  const [selectedKeys, openKeys] = keyPath;
+                  this.setState({
+                    selectedKeys: [selectedKeys],
+                    openKeys: [openKeys],
+                  });
+                }}
               >
                 {menu.name}
               </Menu.Item>
@@ -140,13 +204,22 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
               {subMenus.map((subMenu) => (
                 <Menu.Item
                   key={subMenu.key}
-                  onClick={() =>
+                  onClick={(info) => {
                     window.history.pushState(
                       { path: subMenu.url },
                       "",
                       subMenu.url
-                    )
-                  }
+                    );
+                    const { keyPath } = info;
+                    const [selectedKeys, openKeys] = keyPath;
+                    this.setState({
+                      selectedKeys: [selectedKeys],
+                      openKeys: [openKeys],
+                    });
+                  }}
+                  // onClick={(info) => {
+                  //   console.log(info);
+                  // }}
                 >
                   {subMenu.name}
                 </Menu.Item>
@@ -156,10 +229,15 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
         })}
       </Menu>
     );
-    return mockMenusDom;
+    return mfspaMenusDom;
   }
 
   render() {
+    console.log(
+      "openKeys & selectedKeys",
+      this.state.openKeys,
+      this.state.selectedKeys
+    );
     return (
       <div className="mfspa-menu">
         {/* <Menu
