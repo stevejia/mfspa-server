@@ -7,14 +7,14 @@ const Webpackbar = require("webpackbar");
 module.exports = {
   entry: [
     "webpack/hot/dev-server",
-    "webpack-hot-middleware/client?path=http://localhost:8077/__webpack_hmr",
+    "webpack-hot-middleware/client?path=http://100.100.34.255:8077/__webpack_hmr",
     "./src/index.js",
   ],
   mode: "development",
   output: {
     filename: "index.js",
     path: path.join(cwd, "/dist"),
-    publicPath: "http://localhost:8077/webpack/dist",
+    publicPath: "http://100.100.34.255:8077/webpack/dist",
   },
   module: {
     rules: [
