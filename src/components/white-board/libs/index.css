@@ -1,0 +1,19 @@
+.sj-wb-container {
+    border: 1px solid blue;
+    display: flex;
+}
+
+.sj-wb-toolbar {
+   width: 100px;
+}
+
+.sj-wb-canvas-container {
+    flex: 1;
+}
+
+.sj-wb-canvas {
+    width: 100%;
+    height: 100%;
+    background-color: red;
+    flex: 1;
+}
