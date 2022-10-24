@@ -1,0 +1,54 @@
+.meeting-room {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    .room-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    .room-right {
+        width: 0;
+        .visible {
+            width: 200px;
+        }
+    }
+    .room-content {
+        flex: 1;
+        height: calc(100vh - 60px);
+        .video-container {
+            width: 100%;
+            height: 100%;
+            video {
+                background-color: #000000;
+            }
+        }
+    }
+    .room-footer {
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        position: relative;
+        justify-content: space-between;
+        .room-action-group {
+            display: flex;
+           .room-action-item {
+            width: 40px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            div {
+                font-size: 12px;
+                zoom: 0.8;
+            }
+            .anticon {
+                font-size: 24px;
+            }
+           }
+        }
+        .room-other {
+
+        }
+    }
+}

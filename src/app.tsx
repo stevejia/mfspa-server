@@ -1,13 +1,20 @@
-import { Layout } from "antd";
-import React from "react";
-const { Content, Footer, Header, Sider } = Layout;
-import MfspaLayout from "./mfspa/layout";
-class App extends React.Component {
+import * as React from "react";
+import { Provider } from "react-redux";
+import { genRoutes, RenderRoutes } from "./router";
+// import {  Routes, Switch } from "react-router";
+import MfspaRoutes from "./components/mfspa-router/routes";
+import { isNullOrEmpty } from "./utils";
+class App extends React.Component<any, any> {
+  state = {
+    renderRoutes: true,
+  };
+  componentDidMount(): void {
+    
+  }
   render() {
+    const { renderRoutes } = this.state;
     return (
-      <MfspaLayout>
-        <div id="mfspa-root" className="mfspa-content"></div>
-      </MfspaLayout>
+        renderRoutes && <MfspaRoutes routes={genRoutes()}></MfspaRoutes>
     );
   }
 }

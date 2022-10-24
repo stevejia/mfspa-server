@@ -1,0 +1,38 @@
+.meeting-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .meeting-logo-wrapper {
+    position: relative;
+    width: 300px;
+    display: flex;
+    justify-content: center;
+    margin-top: 150px;
+    .meeting-logo {
+      background-image: url(http://cdn.mfspa.cc/resources/images/logo.png);
+      width: 180px;
+      height: 66px;
+      background-size: cover;
+    }
+    .meeting-setting {
+        font-size: 20px;
+        position: absolute;
+        left: 0;
+        top: 33px;
+        transform: translateY(-50%);
+      }
+  }
+  
+  .meeting-form {
+    margin-top: 100px;
+    width: 300px;
+  }
+  .meeting-login {
+    margin-top: 24px;
+    width: 100%;
+  }
+}
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+}

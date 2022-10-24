@@ -7,8 +7,8 @@ const mime = require("mime");
 const compiler = webpack(webpackConfig);
 const getEnv = require("../tools/getEnv");
 const duration = 1000;
+const env = getEnv();
 const start = () => {
-  const env = getEnv();
   const path = require("path");
   const cwd = process.cwd();
   const dist_dir = path.join(cwd, "dist");
