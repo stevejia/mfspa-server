@@ -25,7 +25,7 @@ export default class Chat extends React.Component<ChatProps, ChatState> {
       },
     ],
     message: "",
-    selectUser: "chat_all_user",
+    selectUser: "",
   };
   private lastKey = "";
   componentDidMount(): void {}
@@ -70,7 +70,7 @@ export default class Chat extends React.Component<ChatProps, ChatState> {
                 className="sender-select"
                 allowClear={false}
               >
-                <Select.Option value="chat_all_user">所有人</Select.Option>
+                <Select.Option value="">所有人</Select.Option>
                 {users?.map((user) => (
                   <Select.Option key={user.userID} value={user.userID}>
                     {user.userID}

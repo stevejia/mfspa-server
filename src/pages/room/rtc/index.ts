@@ -231,11 +231,7 @@ export default class MeetingRtc {
   }
 
   sendMessage(userid, message) {
-    if(!userid) {
-      this.client.sendMessage(`${Math.random()}`, message)
-      return;
-    }
-    const users = this.remoteUsers.filter(user=> user.userID === userid);
+    const users = this.remoteUsers.filter(user=> !userid || user.userID === userid);
     if(users.length >0) {
       this.client.sendMessage(`${Math.random()}`, message, users);
     }
