@@ -182,6 +182,10 @@ export default class MeetingRtc {
       }
     );
 
+    window.onbeforeunload = () => {
+      this.leaveMeeting();
+    }
+
     this.client.on('message-received', (message: QNCustomMessage) => {
       const messageInfo = {
         userid: message.userID,
