@@ -23,10 +23,10 @@ export const getToken = (appid: string, roomid: string, userid: string) => {
   // 此处服务器 URL 仅用于 Demo 测试！随时可能 修改/失效，请勿用于 App 线上环境！
   // 此处服务器 URL 仅用于 Demo 测试！随时可能 修改/失效，请勿用于 App 线上环境！
   // 此处服务器 URL 仅用于 Demo 测试！随时可能 修改/失效，请勿用于 App 线上环境！
-  const requestURL = `http://sumer.dev.qiniu.io/v1/roomtokens`;
+  const requestURL = `https://sumer.qiniu.io/v1/roomtokens`;
   const info = {
     authToken: '',
-    meetingId: "972-112-784",
+    meetingId: roomid,
     userId: userid,
     roomTokenExpireAt: Math.floor((Date.now() + 2 * 24 * 60 * 60 * 1000)/1000)
   }

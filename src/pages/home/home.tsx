@@ -140,7 +140,7 @@ export default class Home extends React.Component<HomeProps, HomeState> {
         <div className="meeting-home-container">
           <div className="meeting-home-header">
             <div className="meeting-home-avatar-container">
-              <Avatar src="http://cdn.mfspa.cc/resources/images/avatar.jpeg"></Avatar>
+              <Avatar src="https://www.mfspa.cc/assets/avatar.jpeg"></Avatar>
               <div className="m-l-xs">{userid}</div>
             </div>
             <SettingOutlined></SettingOutlined>

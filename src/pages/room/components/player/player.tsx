@@ -51,7 +51,7 @@ export default class Player extends React.Component<PlayerProps, PlayerState> {
             <div>
               <Avatar
                 size={64}
-                src="http://cdn.mfspa.cc/resources/images/avatar.jpeg"
+                src="https://www.mfspa.cc/assets/avatar.jpeg"
               ></Avatar>
               <div className="user-control">
                 <span style={{ cursor: "pointer" }}>
