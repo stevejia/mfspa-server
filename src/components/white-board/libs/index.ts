@@ -1,4 +1,4 @@
-import SJEvent from "./event";
+import SJEvent from "./dom/event";
 
 interface SJWhiteBoardConfig {
     // TODO::
@@ -51,13 +51,17 @@ class SJWhiteBoard extends SJEvent {
             const toolbar = document.querySelector('.sj-wb-toolbar');
             const canvas = document.querySelector('.sj-wb-canvas-container');
             const handler = (event)=> {console.log(event)};
-            const removeHandler = (event) => {this.off(toolbar, 'mousedown', handler); console.log('remove event toolbar')};
+            const removeHandler = (event) => {toolbar.off('click', handler, false); console.log('remove event toolbar')};
             // this.on(toolbar, 'mousedown', handler);
             // this.on(toolbar, 'mousedown', handler);
             
             // this.on(canvas, 'mousedown', removeHandler);
 
-            this.once()
+            // toolbar.on('click', handler, false);
+            toolbar.once('click', handler, false);
+
+            canvas.on('click', removeHandler, false);
+
 
             // toolbar.addEventListener('mousedown', handler);
             // toolbar.addEventListener('mousedown', handler);

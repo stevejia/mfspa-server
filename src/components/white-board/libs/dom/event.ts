@@ -1,3 +1,4 @@
+import './dom';
 class SJEvent { 
     private eventList: {element: Node, type: string, listener: Function, options?: any, wrapperListener: Function}[] = []; 
 
@@ -49,7 +50,6 @@ class SJEvent {
             element.removeEventListener(type, event.wrapperListener, options);
         }
     }
-
 }
 
 export default SJEvent;
