@@ -14,8 +14,8 @@ const eventList: EventItem[] = [];
 /**
  * 只能使用function，不然this指向不到当前元素
  */
-HTMLElement.prototype.on = function(type : any, listener : any, options : any) {
-    const element = this;
+HTMLElement.prototype.on = function(type : any, listener : any, options : any, callback?: Function) {
+    const element = this as Node;
     const exist = eventList.some(event => event.element === element && event.type === type && event.listener === listener && event.options === options);
     if(exist) {
         return;
@@ -30,17 +30,18 @@ HTMLElement.prototype.on = function(type : any, listener : any, options : any) {
             }
         }
         listener(event);
+        callback && callback(event);
     }
     element.addEventListener(type, wrapperListener, options);
     eventList.push({element: this, type, listener, wrapperListener, options});
 }
 
 HTMLElement.prototype.once = function(type : any, listener : any, options : any) {
-    const element = this;
-    this.on(element, type, (...args) => {
-        listener(...args);
-        this.off(element, type, listener, options);
+    const element = this as Node;
+    (element as any).on( type, listener, options, ()=> {
+        element.off(type, listener, options);
     });
+        
 }
 
 HTMLElement.prototype.off = function(type : any, listener, options) {
@@ -58,4 +59,24 @@ HTMLElement.prototype.off = function(type : any, listener, options) {
     if(event) {
         element.removeEventListener(type, event.wrapperListener, options);
     }
+}
+
+function registerEvent(element: Node, type: any, listener: any, options: any) {
+    const exist = eventList.some(event => event.element === element && event.type === type && event.listener === listener && event.options === options);
+    if(exist) {
+        return;
+    }
+    const wrapperListener = (event) => {
+        /**
+         * mousedown mouseup事件默认左键触发
+         */
+        if(type === 'mousedown' || type === 'mouseup') {
+            if(event.button !== 0) {
+                return;
+            }
+        }
+        listener(event);
+    }
+    element.addEventListener(type, wrapperListener, options);
+    eventList.push({element: this, type, listener, wrapperListener, options});
 }
