@@ -10,10 +10,6 @@ export default class WhiteBoard extends React.Component<any, any> {
             this.whiteBoard = new SJWhiteBoard(this.containerRef);
             // this.containerRef.innerHTML = "33333";
         }
-        
-
-        const div = document.createElement('div');
-        console.log(div);
     }
     render(): React.ReactNode {
         return <div ref={ref => this.containerRef = ref}>

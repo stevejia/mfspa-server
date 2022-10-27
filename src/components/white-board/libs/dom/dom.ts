@@ -51,11 +51,11 @@ HTMLElement.prototype.off = function(type : any, listener, options) {
     for(let item of eventList) {
         if(item.element === element && item.listener === listener && item.type === type && item.options === options) {
             event = item;
-            const index = eventList.indexOf(item);
+            index = eventList.indexOf(item);
             break;
         }
     }
-    eventList.slice(index, 1);
+    eventList.splice(index, 1);
     if(event) {
         element.removeEventListener(type, event.wrapperListener, options);
     }
