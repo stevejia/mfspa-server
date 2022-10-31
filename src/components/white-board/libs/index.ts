@@ -41,7 +41,9 @@ class SJWhiteBoard {
     private initWhiteboard() {
         const containerEl = this.containerEl;
         this.canvas = containerEl.querySelector('.sj-wb-canvas');
-
+        const {clientWidth, clientHeight} = this.canvas;
+        this.canvas.width = clientWidth;
+        this.canvas.height = clientHeight;
     }
 
     attchBrush() {
@@ -65,24 +67,6 @@ class SJWhiteBoard {
         let container: HTMLElement = this.containerEl;
         tempDivEl.childNodes.forEach((node)=> {
             container.append(node);
-            // const toolbar = document.querySelector('.sj-wb-toolbar');
-            // const canvas = document.querySelector('.sj-wb-canvas-container');
-            // const handler = (event)=> {console.log(event)};
-            // const removeHandler = (event) => {toolbar.off('click', handler, false); console.log('remove event toolbar')};
-            // // this.on(toolbar, 'mousedown', handler);
-            // // this.on(toolbar, 'mousedown', handler);
-            
-            // // this.on(canvas, 'mousedown', removeHandler);
-
-            // // toolbar.on('click', handler, false);
-            // toolbar.once('click', handler, false);
-
-            // canvas.on('click', removeHandler, false);
-
-
-            // toolbar.addEventListener('mousedown', handler);
-            // toolbar.addEventListener('mousedown', handler);
-            // canvas.addEventListener('mousedown', removeHandler);
         });
     }
 }

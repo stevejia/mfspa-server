@@ -1,11 +1,15 @@
 import { getPosition } from "../dom/event";
-import { DEFAULT_BRUSH_CONFIG, SJBrushConfig } from "../types/types";
+import { DEFAULT_BRUSH_CONFIG, SJBrushConfig, SJPosition } from "../types/types";
 
 export default class SJBrush {
     private canvas: HTMLCanvasElement;
     private _color: string;
     private config: SJBrushConfig;
     private ctx: CanvasRenderingContext2D;
+    private points: SJPosition[] = [];
+    private beginPoint: SJPosition;
+    private controlPoint: SJPosition;
+    private endPoint: SJPosition;
     constructor(canvas: HTMLCanvasElement, config: SJBrushConfig) {
         this.config = {...DEFAULT_BRUSH_CONFIG, ...config};
         this.canvas = canvas;
@@ -29,6 +33,8 @@ export default class SJBrush {
     brushStart = (event: MouseEvent) => {
         console.log('brushStart');
         const {x, y} = getPosition(event);
+        this.points.push({x, y});
+        this.beginPoint = {x, y};
         const {ctx, config: {color, lineWidth}} = this;
         ctx.beginPath();
         ctx.moveTo(x,y);
@@ -39,15 +45,31 @@ export default class SJBrush {
     }
     brushing = (event: MouseEvent) => {
         console.log('brushing');
-        const{x,y} = getPosition(event);
-        this.ctx.lineTo(x,y);
-        this.ctx.stroke();
+        const {x,y} = getPosition(event);
+        this.points.push({x,y});
+        if(this.points.length >= 3) {
+            const lastTwoPoints = this.points.slice(-2);
+            const lastOnePoint = lastTwoPoints[1];
+            const lastTwoPoint = lastTwoPoints[0];
+            const controlPoint = {
+                x: (lastOnePoint.x + lastTwoPoint.x)/2,
+                y: (lastOnePoint.y + lastTwoPoint.y)/2
+            }
+            this.drawBeZier(this.beginPoint, controlPoint, lastOnePoint);
+            this.beginPoint = lastOnePoint;
+            this.ctx.stroke();
+        }
+        
+        // this.ctx.lineTo(x,y);
     }
 
     brushEnd = (event: MouseEvent) => {
         console.log('brushEnd');
-        
         this.ctx.stroke();
         this.canvas.off('mousemove', this.brushing, false);
+    }
+
+    private drawBeZier(beginPoint: SJPosition, controlPoint: SJPosition, endPoint: SJPosition) {
+        this.ctx.bezierCurveTo(beginPoint.x, beginPoint.y, controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
     }
 }
