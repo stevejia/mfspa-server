@@ -5,7 +5,7 @@ export interface SJBrushConfig {
 
 export const DEFAULT_BRUSH_CONFIG: Required<SJBrushConfig> = {
     color: 'red',
-    lineWidth: 1
+    lineWidth: 2
 }
 
 export interface SJPosition {

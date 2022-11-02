@@ -1,5 +1,6 @@
 import SJBrush from "./brush/brush";
 import { setCanvasPosition } from "./dom/event";
+import SJToolBar from "./toolbar/toolbar";
 import { DEFAULT_BRUSH_CONFIG } from "./types/types";
 
 interface SJWhiteBoardConfig {
@@ -25,6 +26,7 @@ class SJWhiteBoard {
         this.initWhiteboard();
         setCanvasPosition(this.canvas);
         this.brush = new SJBrush(this.canvas, DEFAULT_BRUSH_CONFIG);
+        new SJToolBar(this.containerEl.querySelector('.sj-wb-toolbar'));
     }
 
     private get containerEl(): HTMLElement {
@@ -42,12 +44,8 @@ class SJWhiteBoard {
         const containerEl = this.containerEl;
         this.canvas = containerEl.querySelector('.sj-wb-canvas');
         const {clientWidth, clientHeight} = this.canvas;
-        this.canvas.width = clientWidth;
-        this.canvas.height = clientHeight;
-    }
-
-    attchBrush() {
-
+        this.canvas.width = clientWidth*4;
+        this.canvas.height = clientHeight*4;
     }
 
     private createWiteBoard() {
@@ -56,7 +54,23 @@ class SJWhiteBoard {
         const styleHeight = typeof height === 'number' ? `${height}px` : height;
         const template = 
             `<div class="sj-wb-container" style="width: ${styleWidth}; height: ${styleHeight}">
-                <div class="sj-wb-toolbar">toolbar</div>
+                <div class="sj-wb-toolbar">
+                    <div type="shape"  class="sj-wb-toolbar-item shape">
+                        <div class="shape-icon"></div>
+                    </div>
+                    <div type="pencil" class="sj-wb-toolbar-item pencil">
+                        <div class="pencil-icon"></div>
+                    </div>
+                    <div type="rubber" class="sj-wb-toolbar-item rubber">
+                        <div class="rubber-icon"></div>
+                    </div>
+                    <div type="back" class="sj-wb-toolbar-item back">
+                        <div class="back-icon"></div>
+                    </div>
+                    <div type="forward" class="sj-wb-toolbar-item forward">
+                        <div class="forward-icon"></div>
+                    </div>
+                </div>
                 <div class="sj-wb-canvas-container">
                     <canvas class="sj-wb-canvas"></canvas>
                 </div>
