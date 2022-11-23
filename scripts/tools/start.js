@@ -6,7 +6,9 @@ const hotMiddleware = require("webpack-hot-middleware");
 const mime = require("mime");
 const compiler = webpack(webpackConfig);
 const getEnv = require("../tools/getEnv");
-
+const fs = require('fs');
+const http = require('http');
+const https = require('https');
 const start = () => {
   const env = getEnv();
   const path = require("path");
@@ -60,7 +62,19 @@ const start = () => {
       res.end();
     });
   });
-  app.listen(8077);
+
+  const privateKey = fs.readFileSync('key.pem', 'utf-8');
+  const certificate = fs.readFileSync('cert.pem', 'utf-8');
+
+  const credentials = {key: privateKey, cert: certificate};
+
+  const httpServer = http.createServer(app);
+  const httpsServer = https.createServer(credentials, app);
+
+  httpServer.listen(8077);
+  httpsServer.listen(8078);
+
+  // app.listen(8077);
   console.clear();
   console.log("listen on 8077");
 };

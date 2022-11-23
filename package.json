@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./scripts/index.js --dev",
+    "starts": "export HTTPS=true && SSL_CRT_FILE=cert.pem&&SSL_KEY_FILE=key.pem && npm start",
     "build": "webpack --config ./config/webpack.prod.config.js --mode production",
     "test2": "node test.js --production",
     "build2": "node ./scripts/index.js --prod"

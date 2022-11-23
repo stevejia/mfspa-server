@@ -4,6 +4,7 @@ import React from "react";
 class Room extends React.Component<any, any, any> {
   private videoRef: HTMLVideoElement = null;
   private videoRef2: HTMLVideoElement = null;
+  private audioRef: HTMLAudioElement = null;
   private pc: RTCPeerConnection = null;
   private userId: number = null;
   private client: WebSocket = null;
@@ -32,7 +33,7 @@ class Room extends React.Component<any, any, any> {
   }
 
   private connectWS = () => {
-    this.client = new WebSocket("ws://101.34.168.189:6503/", "json");
+    this.client = new WebSocket("wss://www.mfspa.cc/ws", "json");
     this.client.onmessage = async (ev) => {
       console.log(ev);
       const { data: dataJson } = ev;
@@ -80,10 +81,17 @@ class Room extends React.Component<any, any, any> {
     };
   };
 
-  private getUserMedia = async (config = { audio: false, video: true }) => {
+  private getUserMedia = async (config: MediaStreamConstraints = { audio: false, video: true }) => {
+    config = {video: false, audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+    }};
     const stream = await window.navigator.mediaDevices
       .getUserMedia(config)
-      .catch((err) => console.log(err));
+      .catch((err) => {console.log(err)
+        return undefined;
+      });
     return stream;
   };
 
@@ -103,8 +111,9 @@ class Room extends React.Component<any, any, any> {
   }
 
   private audioTalk = async () => {
-    const stream = await this.getUserMedia({ video: false, audio: false });
-    this.playWithStream(stream);
+    const stream = await this.getUserMedia({ video: false, audio: true });
+    // this.playWithStream(stream, this.audioRef);
+    this.sendMessage({ type: "apply", id: this.userId });
   };
   private shareScreen = async () => {
     // const stream = await navigator.mediaDevices
@@ -131,7 +140,7 @@ class Room extends React.Component<any, any, any> {
    * 播放流
    * @param stream 本地流
    */
-  private playWithStream = (stream, videoRef: HTMLVideoElement = null) => {
+  private playWithStream = (stream, videoRef: HTMLVideoElement | HTMLAudioElement = null) => {
     videoRef = videoRef || this.videoRef;
     videoRef.srcObject = stream;
     videoRef.onloadedmetadata = () => {
@@ -152,16 +161,16 @@ class Room extends React.Component<any, any, any> {
   };
   private createOffer = async () => {
     const offer = await this.pc.createOffer({
-      offerToReceiveVideo: true,
-      offerToReceiveAudio: false,
+      offerToReceiveVideo: false,
+      offerToReceiveAudio: true,
     });
     this.pc.setLocalDescription(offer);
     this.sendMessage({ type: "giveoffer", sdp: offer, id: this.userId });
   };
   private inboundStream: MediaStream = null;
   private async createPeerP2P() {
-    const displayStream = await this.getDisplayMedia();
-    this.playWithStream(displayStream);
+    const displayStream = await this.getUserMedia({video: false, audio: true});
+    // this.playWithStream(displayStream);
     //初始化peer connection;
     this.pc = new RTCPeerConnection({
       iceServers: [
@@ -177,6 +186,7 @@ class Room extends React.Component<any, any, any> {
     let inboundStream = this.inboundStream;
     this.pc.ontrack = (ev) => {
       debugger;
+      console.log(ev);
       let stream = null;
       if (ev.streams && ev.streams[0]) {
         // videoRef.srcObject = ev.streams[0];
@@ -216,22 +226,25 @@ class Room extends React.Component<any, any, any> {
         <div
           style={{
             display: "flex",
-            width: 1220,
+            width: "60%",
             justifyContent: "space-between",
           }}
         >
           <video
             ref={(ref) => (this.videoRef = ref)}
-            width={600}
-            height={400}
+            width={150}
+            height={150}
             style={{ background: "#eeeeee" }}
           ></video>
           <video
             ref={(ref) => (this.videoRef2 = ref)}
-            width={600}
-            height={400}
+            width={150}
+            height={150}
             style={{ background: "#eeeeee" }}
           ></video>
+          <audio>
+            ref={(ref)=> this.audioRef = ref};
+          </audio>
         </div>
         <div>
           <Button onClick={this.videoTalk}>视频通话</Button>
