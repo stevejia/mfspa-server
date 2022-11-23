@@ -1,7 +1,8 @@
 import { ChangeRule, CompData, ResizeRect } from "./types";
 import './dom/dom';
+import SJEmitter from "./emitter/emitter";
 let _isResizing = false;
-class RotateResize {
+class RotateResize extends SJEmitter {
   changeRule: ChangeRule;
   compData: CompData;
   containerRect: DOMRect;
@@ -19,6 +20,7 @@ class RotateResize {
   startDeltaX!: number;
   startDeltay!: number;
   constructor() {
+    super();
     this.changeRule = {
       0: {
         w: 0,
@@ -341,12 +343,13 @@ class RotateResize {
     // let { x: outX, y: outY } = this.containerRect;
     left = left - outX;
     top = top - outY;
-    
-    if(nw !== 1 && nh !== 1) {
+    console.log(left, top);
+    if((this.compData.width !== 1 && this.compData.height !== 1) || (nw !== 1 && nh !== 1)) {
       this.compData.width = Math.floor(nw);
       this.compData.height = Math.floor(nh);
       this.compData.left = Math.floor(left);
       this.compData.top = Math.floor(top);
+      this.emit('resize', this.compData);
     }
     // this.symbolVm.resizeHeight();
 
