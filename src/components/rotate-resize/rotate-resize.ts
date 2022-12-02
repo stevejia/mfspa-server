@@ -6,6 +6,7 @@ class RotateResize extends SJEmitter {
   changeRule: ChangeRule;
   compData: CompData;
   containerRect: DOMRect;
+  container: HTMLElement;
   scale: number;
   responsiveResize: any;
   originIndex!: number;
@@ -92,8 +93,37 @@ class RotateResize extends SJEmitter {
     if (!container) {
       return;
     }
-    let rect = container!.getBoundingClientRect();
+    let rect = container!.parentElement.getBoundingClientRect();
+    console.log('rect', rect);
     this.containerRect = rect;
+    this.container = container;
+    this.initResizeOperator();
+  }
+
+  private initResizeOperator() {
+    const template = `<div class='component-select'>
+                        <div index="0" class='select-item top-left'></div>
+                        <div index="1" class='select-item top-center'></div>
+                        <div index="2" class='select-item top-right'></div>
+                        <div index="3" class='select-item center-right'></div>
+                        <div index="4" class='select-item bottom-right'></div>
+                        <div index="5" class='select-item bottom-center'></div>
+                        <div index="6" class='select-item bottom-left'></div>
+                        <div index="7" class='select-item center-left'></div>
+                    </div>`;
+    const div = document.createElement('div');
+    div.innerHTML = template;
+    const compSelect = div.querySelector('.component-select');
+    const selectItems = compSelect.querySelectorAll('select-item');
+    selectItems.forEach(item=> {
+      item.addEventListener('mousedown', (event) => {
+        
+      })
+    })
+    this.container.append(compSelect);
+    // const nodes = div.children;
+    // this.container.insertBefore(...nodes);
+    
   }
 
   onKeyDown(event: { shiftKey: any; }) {
@@ -158,6 +188,7 @@ class RotateResize extends SJEmitter {
     };
     let { points } = this._calcCoordinate(rect);
     let { pageX, pageY } = event;
+    console.log(pageX, pageY);
 
     //index是当前resize的位置索引（0-7）左上角开始，顺时针递增
     //根据index获取当前位置的坐标

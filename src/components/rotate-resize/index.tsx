@@ -14,7 +14,7 @@ export default class TestRotateResize extends ProxyStateComponent<any, TestState
     private rotateIns: RotateResize;
     constructor(props) {
         const initalState: TestState = {
-            compData: {left: 0, top: 0, width: 300, height: 300, rotate: 30}
+            compData: {left: 200, top: 200, width: 300, height: 300, rotate: 60}
         };
         super(initalState, props);
         console.log(this.state);
@@ -37,26 +37,11 @@ export default class TestRotateResize extends ProxyStateComponent<any, TestState
         e.preventDefault();
         e.stopPropagation();
         console.log(index, e.currentTarget);
-        const target = e.currentTarget;
-        // const mouseMove = (event: MouseEvent) => {
-        //     console.log(event);
-        //     this.rotateIns.resize(event, this.state.compData, index, 1);
-        // }
-        // const mouseUp = (event: MouseEvent) => {
-        //     document.removeEventListener('mousemove', mouseMove);
-        //     document.removeEventListener('mouseup', mouseUp);
-        // }
-        // target.addEventListener('mousemove', event => {
-        //     console.log("target event", event);
-        // })
-        // document.addEventListener('mousemove', mouseMove);
-        // document.addEventListener('mouseup', mouseUp);
-        this.rotateIns.resize(e, {...this.state.compData}, index, 1);
+        this.rotateIns.resize(e, JSON.parse(JSON.stringify({...this.state.compData})), index, 1);
     }
 
     render() {
         console.log('changed');
-        
         const {compData: {rotate, ...restData}} = this.state;
         return <div className='container'>
             <div className='component' style={{...restData, ...{transform: `rotate(${rotate}deg)`}}} ref={ref=> this.ref = ref} id='test-component'>
