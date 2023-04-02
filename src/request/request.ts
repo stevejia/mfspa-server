@@ -1,3 +1,4 @@
+import baseUrl from "./baseUrl";
 import { getQueryString } from "./requestUtil";
 
 interface MfspaRequestOptions {
@@ -12,6 +13,10 @@ class MfspaRequest {
     params?: any,
     options?: MfspaRequestOptions
   ) {
+    if (!/^((ht|f)tps?:\/\/)?[\w-]+(\.[\w-]+)+:\d{1,5}\/?$/.test(url)) {
+      url = baseUrl + url;
+    }
+
     return new Promise(async (resolve, reject) => {
       try {
         switch (method) {

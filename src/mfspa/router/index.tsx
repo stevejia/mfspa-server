@@ -22,7 +22,7 @@ class MfspaRouter extends React.Component<any, any> {
   async mounted() {
     const {
       data: { debugInfo: debugApps },
-    } = await request.get(`${config.nodeHost}api/v1/debuginfo/get`);
+    } = await request.get(`debuginfo/get`);
     console.log(debugApps);
     this._debugApps = debugApps;
     this.setState({ debugApps });
@@ -109,7 +109,7 @@ class MfspaRouter extends React.Component<any, any> {
   private async getAppInfo(appName: string): Promise<any> {
     const {
       data: { appInfo },
-    } = await request.get(`${config.nodeHost}api/v1/appinfo/get`, {
+    } = await request.get(`appinfo/get`, {
       appName,
       currentUsed: 1,
     });

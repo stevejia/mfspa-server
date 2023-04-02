@@ -52,7 +52,7 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
     return new Promise(async (resolve, reject): Promise<any> => {
       const {
         data: { menuList },
-      } = await request.get(`${config.nodeHost}api/v1/menuinfo/getmenus`);
+      } = await request.get(`menuinfo/getmenus`);
       // 本地菜单调试处理代码
       // menuList.forEach((menu) => {
       //   menu.url = menu.url?.replace(

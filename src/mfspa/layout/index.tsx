@@ -15,7 +15,9 @@ class MfspaLayout extends React.Component<any, any, any> {
         <Layout>
           <Header className="mfspa-header">Mfspa 测试站</Header>
           <MfspaContent>{children}</MfspaContent>
-          {/* <Footer>Footer</Footer> */}
+          <Footer className="mfspa-footer">
+            <a target="blank" href="https://beian.miit.gov.cn/">备案号：皖ICP备2022005345号</a>
+          </Footer>
         </Layout>
       </Layout>
     );
