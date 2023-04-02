@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Menu, Button } from "antd";
+import { Menu, Button, MenuProps } from "antd";
 // import {
 //   AppstoreOutlined,
 //   MenuUnfoldOutlined,
@@ -15,6 +15,7 @@ import { Menu, Button } from "antd";
 import "./index.less";
 import request from "../../../../request/request";
 import config from "../../../../../mfspa.config";
+import { MenuInfo } from "rc-menu/lib/interface";
 const { SubMenu } = Menu;
 
 interface MfspaMenuProps {
@@ -44,6 +45,7 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       } = event;
       this.initSelctedMenus(pathname, mockMenus, menus);
     });
+    this.initSelctedMenus(pathname, this.state.mockMenus, menus);
   }
 
   private getMenus(): Promise<any> {
@@ -171,12 +173,40 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
       defaultOpenKeys = openKeys;
     }
 
+    const changeMenu = (menu: any, info: MenuInfo) => {
+      console.log(menu, info);
+      const {url} = menu;
+      if(!url) {
+        console.warn('菜单的url非法');
+        return;
+      }
+      const historyUrl = "/" + url.split('/').slice(3).join('/');
+      window.history.pushState({ path: historyUrl }, "", historyUrl);
+      const { keyPath } = info;
+      const [selectedKeys, openKeys] = keyPath;
+      this.setState({
+        selectedKeys: [selectedKeys],
+        openKeys: [openKeys],
+      });
+    };
+
+    const onOpenChange: MenuProps['onOpenChange'] = keys => {
+      const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
+    if (!menus.some(menu => menu.key === latestOpenKey)) {
+      this.setState({openKeys: keys});
+
+    } else {
+      this.setState({openKeys: [latestOpenKey]});
+    }
+    };
+
     const mfspaMenusDom = (
       <Menu
         // defaultSelectedKeys={defaultSelectedKeys}
         // defaultOpenKeys={defaultOpenKeys}
         selectedKeys={selectedKeys}
         openKeys={openKeys}
+        onOpenChange={onOpenChange}
         mode="inline"
         theme="dark"
       >
@@ -187,13 +217,7 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
               <Menu.Item
                 key={menu.key}
                 onClick={(info) => {
-                  window.history.pushState({ path: menu.url }, "", menu.url);
-                  const { keyPath } = info;
-                  const [selectedKeys, openKeys] = keyPath;
-                  this.setState({
-                    selectedKeys: [selectedKeys],
-                    openKeys: [openKeys],
-                  });
+                  changeMenu(menu, info);
                 }}
               >
                 {menu.name}
@@ -206,21 +230,8 @@ class MfspaMenu extends React.Component<MfspaMenuProps, any> {
                 <Menu.Item
                   key={subMenu.key}
                   onClick={(info) => {
-                    window.history.pushState(
-                      { path: subMenu.url },
-                      "",
-                      subMenu.url
-                    );
-                    const { keyPath } = info;
-                    const [selectedKeys, openKeys] = keyPath;
-                    this.setState({
-                      selectedKeys: [selectedKeys],
-                      openKeys: [openKeys],
-                    });
+                    changeMenu(subMenu, info);
                   }}
-                  // onClick={(info) => {
-                  //   console.log(info);
-                  // }}
                 >
                   {subMenu.name}
                 </Menu.Item>
