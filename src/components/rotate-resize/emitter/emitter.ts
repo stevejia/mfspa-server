@@ -1,8 +1,7 @@
 const emitterMap: { [key: string]: Function[] } = {};
-export default class SJEmitter {
+export default class SJEmitter <T extends string> {
+  public on(key: T, data?: any): void;
   
-
-
   on(type: string, callback: Function) {
     const eventList = emitterMap[type];
     if (!eventList) {
@@ -11,7 +10,7 @@ export default class SJEmitter {
     }
     eventList.push(callback);
   }
-
+  public off(key: T, data?: any): void;
   off(type: string, callback: Function) {
     let eventList = emitterMap[type];
     if (!eventList) {
@@ -20,8 +19,8 @@ export default class SJEmitter {
     eventList = eventList.filter((e) => e !== callback);
     emitterMap[type] = eventList;
   }
-
-  emit(type: string, data: any) {
+  public emit(key: T, data?: any): void;
+  emit(type: string, data?: any) {
     const eventList = emitterMap[type];
     if (!eventList) {
       return;

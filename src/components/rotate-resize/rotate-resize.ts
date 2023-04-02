@@ -1,176 +1,324 @@
-import { ChangeRule, CompData, ResizeRect } from "./types";
-import './dom/dom';
+import {
+  ChangeRule,
+  CompData,
+  DefaultResizeConfig,
+  Position,
+  ResizeConfig,
+} from "./types";
+import "./dom/dom";
 import SJEmitter from "./emitter/emitter";
 let _isResizing = false;
-class RotateResize extends SJEmitter {
-  changeRule: ChangeRule;
-  compData: CompData;
-  containerRect: DOMRect;
-  container: HTMLElement;
-  scale: number;
-  responsiveResize: any;
-  originIndex!: number;
-  scaleXToY!: number;
-  scaleYToX!: number;
-  currentPoint!: { x: number; y: number; };
-  oppositePoint!: { x: number; y: number; };
-  currentRule: any;
-  originPos!: { pageX: number; pageY: number; };
-  index!: number;
-  rect!: ResizeRect;
-  startDeltaX!: number;
-  startDeltay!: number;
-  constructor() {
+class RotateResize extends SJEmitter<'rotate-start' | 'rotate' | 'rotate-end' | 'resize-start'|'resize' | 'resize-end'> {
+  private changeRule: ChangeRule;
+  private compData: CompData;
+  private containerRect: DOMRect;
+  private container: HTMLElement;
+  private scale: number;
+  private responsiveResize: any;
+  private originIndex!: number;
+  private scaleXToY!: number;
+  private scaleYToX!: number;
+  private currentPoint!: { x: number; y: number };
+  private oppositePoint!: { x: number; y: number };
+  private currentRule: any;
+  private index!: number;
+  private startDeltaX!: number;
+  private startDeltay!: number;
+  private config: ResizeConfig;
+  private _selector: boolean;
+  private selectDom: HTMLDivElement;
+  private selectStyleDom: HTMLStyleElement;
+  private rotateCenter: {x: number; y: number};
+  private startPos: {x: number; y: number};
+  private o_rotateDeg: number;
+  constructor(config: ResizeConfig, elementLike: string | HTMLElement ) {
     super();
+    if (!config.compData) {
+      throw new Error("the compData is invalid!");
+    }
+    this.config = { ...DefaultResizeConfig, ...config };
+    this.compData = JSON.parse(JSON.stringify(this.config.compData));
+    this.scale = this.config.scale;
+    this._selector = this.config.selector;
     this.changeRule = {
       0: {
         w: 0,
         h: 0,
         rw: 1,
-        rh: 1
+        rh: 1,
       },
       1: {
         h: 0,
-        w: -0.5
+        w: -0.5,
       },
       2: {
         w: -1,
         h: 0,
         rw: 1,
-        rh: -1
+        rh: -1,
       },
       3: {
         w: -1,
-        h: -0.5
+        h: -0.5,
       },
       4: {
         w: -1,
         h: -1,
         rw: 1,
-        rh: 1
+        rh: 1,
       },
       5: {
         w: -0.5,
-        h: -1
+        h: -1,
       },
       6: {
         w: 0,
         h: -1,
         rw: 1,
-        rh: -1
+        rh: -1,
       },
       7: {
         w: 0,
-        h: -0.5
-      }
+        h: -0.5,
+      },
     };
     document.addEventListener("keydown", this.onKeyDown);
     document.addEventListener("keyup", this.onKeyUp);
+    this.init(elementLike);
+  }
+  
+  public set showSelector(selector: boolean) {
+    this._selector = selector;
   }
 
-  init(vm: any, elementLike: string | HTMLElement) {
-    this._init(vm, elementLike);
+  public get showSelector(): boolean {
+    return this._selector;
   }
-  _init(vm: any, elementLike: string | HTMLElement) {
-    this.compData = vm;
+
+  private init(elementLike: string | HTMLElement) {
+    // this.compData = compData;
     let element: HTMLElement;
-    if(typeof elementLike === 'string') {
+    if (typeof elementLike === "string") {
       element = document.querySelector(elementLike);
-    }else {
+    } else {
       element = elementLike;
     }
-    // let element = document.querySelector(`${elementCls}.single`);
     let container = element;
-    // container.on('click', (event)=> {
-    //   // event.preventDefault();
-    //   // event.stopPropagation();
-    //   console.log('container clicked');
-    // }, true);
-    // document.documentElement.on('click', ()=> {
-    //   console.log('document clicked');
-    // });
-    // let container = document.querySelector(elementCls);
     if (!container) {
       return;
     }
     let rect = container!.parentElement.getBoundingClientRect();
-    console.log('rect', rect);
     this.containerRect = rect;
     this.container = container;
-    this.initResizeOperator();
+    this.renderResizeOperator();
   }
 
-  private initResizeOperator() {
+  private renderResizeOperator() {
+    if (!this.showSelector) {
+      if (this.selectDom) {
+        this.selectDom.remove();
+      }
+      if (this.selectStyleDom) {
+        this.selectStyleDom.remove();
+      }
+      return;
+    }
+    if (this.selectDom) {
+      return;
+    }
+    const [dir0, dir1, dir2, dir3] = this.getCursorDirections();
     const template = `<div class='component-select'>
-                        <div index="0" class='select-item top-left'></div>
-                        <div index="1" class='select-item top-center'></div>
-                        <div index="2" class='select-item top-right'></div>
-                        <div index="3" class='select-item center-right'></div>
-                        <div index="4" class='select-item bottom-right'></div>
-                        <div index="5" class='select-item bottom-center'></div>
-                        <div index="6" class='select-item bottom-left'></div>
-                        <div index="7" class='select-item center-left'></div>
+                        <div index="0" class='select-item top-left ${dir0}-resize'></div>
+                        <div index="1" class='select-item top-center ${dir1}-resize middle'></div>
+                        <div index="2" class='select-item top-right ${dir2}-resize'></div>
+                        <div index="3" class='select-item center-right ${dir3}-resize middle'></div>
+                        <div index="4" class='select-item bottom-right ${dir0}-resize'></div>
+                        <div index="5" class='select-item bottom-center ${dir1}-resize middle'></div>
+                        <div index="6" class='select-item bottom-left ${dir2}-resize'></div>
+                        <div index="7" class='select-item center-left ${dir3}-resize middle'></div>
+                        <div class='rotate-container'>
+                          <div class="dash-line"></div>
+                          <div class="rotate"></div>
+                        </div>
                     </div>`;
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.innerHTML = template;
-    const compSelect = div.querySelector('.component-select');
-    const selectItems = compSelect.querySelectorAll('select-item');
-    selectItems.forEach(item=> {
-      item.addEventListener('mousedown', (event) => {
-        
-      })
-    })
+    const compSelect = div.querySelector<HTMLDivElement>(".component-select");
+    this.selectDom = compSelect;
+    const selectItems = compSelect.querySelectorAll(".select-item");
+    selectItems.forEach((item) => {
+      item.addEventListener("mousedown", (event) => {
+        const index = item.getAttribute("index");
+        this.resize(event, this.compData, +index, this.config.scale);
+      });
+    });
+    const rotateDom = compSelect.querySelector<HTMLDivElement>('.rotate');
+    rotateDom.addEventListener('mousedown', this.rotate);
     this.container.append(compSelect);
-    // const nodes = div.children;
-    // this.container.insertBefore(...nodes);
-    
+    this.attachSelectorStyle();
   }
 
-  onKeyDown(event: { shiftKey: any; }) {
+  private attachSelectorStyle() {
+    const styleStr = `.component-select {
+        width: 100%;
+        height: 100%;
+        border: 1px dashed;
+        position: relative;
+      }
+      .select-item {
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        cursor: ;
+      }
+      .select-item.top-left {
+        left: 0;
+        top: 0;
+      }
+      .select-item.top-center{
+        left: 50%;
+        top: 0;
+      }
+      .select-item.top-right {
+        left: 100%;
+        top: 0;
+        cursor: ne-resize;
+      }
+      .select-item.center-right {
+        left: 100%;
+        top: 50%;
+      }
+      .select-item.bottom-right {
+        left: 100%;
+        top: 100%;
+      }
+      .select-item.bottom-center {
+        left: 50%;
+        top: 100%;
+      }
+      .select-item.bottom-left {
+        left: 0;
+        top: 100%;
+      }
+      .select-item.center-left {
+        left: 0;
+        top: 50%;
+      }
+
+      .select-item.nw-resize {
+        cursor: nw-resize!important;
+      }
+
+      .select-item.n-resize {
+        cursor: n-resize!important;
+      }
+
+      .select-item.ne-resize {
+        cursor: ne-resize!important;
+      }
+      .select-item.e-resize {
+        cursor: e-resize!important;
+      }
+
+      .component-select .rotate-container {
+        position: absolute;
+        left: 50%;
+        top: -40px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        flex-direction: column-reverse;
+      }
+      .rotate-container .dash-line {
+        height: 20px;
+        border-left: 1px dashed #000;
+      }
+      .component-select .rotate {
+        background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnICBpZD0iTGF5ZXJfMSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMzIgMzI7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAzMiAzMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxwYXRoIGQ9Ik0yOCwxNmMtMS4yMTksMC0xLjc5NywwLjg1OS0yLDEuNzY2QzI1LjI2OSwyMS4wMywyMi4xNjcsMjYsMTYsMjZjLTUuNTIzLDAtMTAtNC40NzgtMTAtMTBTMTAuNDc3LDYsMTYsNiAgYzIuMjQsMCw0LjI5NSwwLjc1Myw1Ljk2LDJIMjBjLTEuMTA0LDAtMiwwLjg5Ni0yLDJzMC44OTYsMiwyLDJoNmMxLjEwNCwwLDItMC44OTYsMi0yVjRjMC0xLjEwNC0wLjg5Ni0yLTItMnMtMiwwLjg5Ni0yLDJ2MC41MTggIEMyMS43MzMsMi45MzIsMTguOTc3LDIsMTYsMkM4LjI2OCwyLDIsOC4yNjgsMiwxNnM2LjI2OCwxNCwxNCwxNGM5Ljk3OSwwLDE0LTkuNSwxNC0xMS44NzVDMzAsMTYuNjcyLDI4LjkzOCwxNiwyOCwxNnoiLz48L3N2Zz4=);
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+      }
+    }`;
+    if (!this.selectStyleDom) {
+      this.selectStyleDom = document.createElement("style");
+      this.selectStyleDom.innerHTML = styleStr;
+      document.head.append(this.selectStyleDom);
+    }
+  }
+
+  private getCursorDirections() {
+    let directions = ["nw", "n", "ne", "e"];
+    let { rotate } = this.compData;
+    rotate = rotate >= 170 ? rotate - 180 : rotate;
+    rotate += 10;
+    const index = Math.floor(rotate / 45);
+    const restDirs = directions.splice(0, index);
+    directions = [...directions, ...restDirs];
+    return directions;
+  }
+
+  onKeyDown = (event: { shiftKey: any }) => {
     if (_isResizing) {
       return;
     }
     let responsiveResize = event.shiftKey;
-    let middles = document.querySelectorAll("div[middle]");
-    middles.forEach((mEl: any) => {
+    let middles = this.getMiddles();
+    middles!.forEach((mEl: any) => {
       mEl.style.display = responsiveResize ? "none" : "block";
     });
-  }
+  };
 
-  onKeyUp() {
+  onKeyUp = () => {
     if (_isResizing) {
       return;
     }
-    let middles = document.querySelectorAll("div[middle]");
-    middles.forEach((mEl: any) => {
+    let middles = this.getMiddles();
+    middles!.forEach((mEl: any) => {
       mEl.style.display = "block";
     });
+  };
+
+  private getMiddles() {
+    let middles: NodeListOf<HTMLDivElement>;
+    if (this.selectDom) {
+      middles = this.selectDom.querySelectorAll<HTMLDivElement>(".middle");
+    }
+    return middles;
   }
 
   /**
-   *
+   * 旋转后变换
    * @param {*} event
    * @param {*} index
    * @param {*} rect
-   * 旋转后变换
    */
-
-  resize(event: { shiftKey?: any; stopPropagation?: any; preventDefault?: any; pageX?: any; pageY?: any; }, compData: any, index: number, scale: any) {
+  resize(
+    event: {
+      shiftKey?: any;
+      stopPropagation?: any;
+      preventDefault?: any;
+      pageX?: any;
+      pageY?: any;
+    },
+    compData: any,
+    index: number,
+    scale: any
+  ) {
     _isResizing = true;
     this.scale = scale;
     let responsiveResize = event.shiftKey;
     this.responsiveResize = responsiveResize;
-    let middles = document.querySelectorAll("div[middle]");
-    middles.forEach((mEl: any) => {
+    let middles = this.getMiddles();
+    middles!.forEach((mEl: any) => {
       mEl.style.display = responsiveResize ? "none" : "block";
     });
     if (this.responsiveResize) {
       this.originIndex = index;
       this.scaleXToY = this.compData.width / this.compData.height;
       this.scaleYToX = this.compData.height / this.compData.width;
-      // if (index % 2 === 1) {
-      //   index = (++index) % 8;
-      // }
     }
     this.compData = compData;
     event.stopPropagation();
@@ -184,12 +332,9 @@ class RotateResize extends SJEmitter {
       y,
       width,
       height,
-      deg
+      deg,
     };
     let { points } = this._calcCoordinate(rect);
-    let { pageX, pageY } = event;
-    console.log(pageX, pageY);
-
     //index是当前resize的位置索引（0-7）左上角开始，顺时针递增
     //根据index获取当前位置的坐标
     let currentPoint = points[index];
@@ -200,17 +345,10 @@ class RotateResize extends SJEmitter {
     //根据当前的索引获取缩放时固定点(缩放点的对角点)相对于左上角的位置关系
     //例如 右下角为缩放固定点的时候，那么右下角的x-width=左上角的x y-height=左上角的y
     this.currentRule = this.changeRule[(index + 4) % 8];
-
-    // let { pageX, pageY } = event;
-
-    this.originPos = { pageX, pageY };
-
     this.index = index;
-    this.rect = rect;
-
     let center = {
       x: x + ox + width / 2,
-      y: y + oy + height / 2
+      y: y + oy + height / 2,
     };
     let originCurrent = this._calcRotatedCordinate(currentPoint, center, -deg);
     let originOpposite = this._calcRotatedCordinate(
@@ -222,44 +360,30 @@ class RotateResize extends SJEmitter {
     this.startDeltay = originCurrent.y - originOpposite.y;
     document.addEventListener("mousemove", this.mouseMove, false);
     document.addEventListener("mouseup", this.mouseUp, false);
+    this.emit("resize-start");
   }
 
   /**
    * 缩放过程中鼠标移动控制缩放的大小 位置
    */
-  mouseMove = (event: { stopPropagation?: any; preventDefault?: any; pageX?: any; pageY?: any; }) => {
+  mouseMove = (event: {
+    stopPropagation?: any;
+    preventDefault?: any;
+    pageX?: any;
+    pageY?: any;
+  }) => {
     event.stopPropagation();
     event.preventDefault();
     //获取鼠标当前的位置
     let { pageX, pageY } = event;
     let { x: outX, y: outY } = this.containerRect;
-
     pageX = (pageX - outX) / this.scale + outX;
     pageY = (pageY - outY) / this.scale + outY;
-    // pageX = pageX / this.scale;
-    // pageY = pageY / this.scale;
-    // console.log(pageX, pageY);
-    // console.log(pageX / this.scale, pageY / this.scale);
-
-    // if (this.responsiveResize) {
-    //   let deltaPageX = pageX - this.originPos.pageX;
-    //   let deltaPageY = pageY - this.originPos.pageY;
-    //   if ([1, 5].indexOf(this.originIndex) > -1) {
-    //     let scaleXToY = this.scaleXToY;
-    //     deltaPageX = -scaleXToY * deltaPageY;
-
-    //   } else {
-    //     let scaleYToX = this.scaleYToX;
-    //     deltaPageY = scaleYToX * deltaPageX;
-    //   }
-    //   pageX = this.currentPoint.x + this.currentRule.rw * deltaPageX;
-    //   pageY = this.currentPoint.y + this.currentRule.rh * deltaPageY;
-    // }
 
     let { x, y } = this.oppositePoint;
     let newCenter = {
       x: (pageX + x) / 2,
-      y: (pageY + y) / 2
+      y: (pageY + y) / 2,
     };
     let noRotateCordinate = this._calcRotatedCordinate(
       { x: pageX, y: pageY },
@@ -283,7 +407,7 @@ class RotateResize extends SJEmitter {
       let pPoint = this.getProjectivePoint({ x: pageX, y: pageY }, param);
       newCenter = {
         x: (this.oppositePoint.x + pPoint.x) / 2,
-        y: (this.oppositePoint.y + pPoint.y) / 2
+        y: (this.oppositePoint.y + pPoint.y) / 2,
       };
       noRotateCordinate2 = this._calcRotatedCordinate(
         this.oppositePoint,
@@ -317,10 +441,6 @@ class RotateResize extends SJEmitter {
     }
 
     if (this.responsiveResize) {
-      // if (!this.responsiveWidth) {
-      //   this.responsiveWidth = this.compData.width;
-      // }
-
       if ([1, 5].indexOf(this.originIndex) > -1) {
         let scaleXToY = this.scaleXToY;
         nw = scaleXToY * nh;
@@ -330,7 +450,6 @@ class RotateResize extends SJEmitter {
       }
 
       // let resizeScale = nw / this.responsiveWidth;
-      // console.log(resizeScale);
       let oDx = this.currentPoint.x - this.oppositePoint.x;
       let oDy = this.currentPoint.y - this.oppositePoint.y;
 
@@ -344,85 +463,54 @@ class RotateResize extends SJEmitter {
       let newX = (b * this.currentPoint.x + (a - b) * this.oppositePoint.x) / a;
       let newY = (b * this.currentPoint.y + (a - b) * this.oppositePoint.y) / a;
 
-      //   let newX = oDx * resizeScale + this.oppositePoint.x;
-      // let newY = oDy * resizeScale + this.oppositePoint.y;
-      // console.log(newX, newY);
       newCenter = {
         x: (this.oppositePoint.x + newX) / 2,
-        y: (this.oppositePoint.y + newY) / 2
+        y: (this.oppositePoint.y + newY) / 2,
       };
-      // this.testDiv(newCenter.x, newCenter.y);
       noRotateCordinate2 = this._calcRotatedCordinate(
         this.oppositePoint,
         newCenter,
         -this.compData.rotate
       );
-      // this.testDiv(noRotateCordinate2.x, noRotateCordinate2.y);
     }
-
-    //TODO::旋转后 超出边界 固定位置计算逻辑还未给出
-
-    // if (overflowY || overflowX) {
-    //     let r = Math.sqrt(nw * nw + nh * nh) / 2;
-    //     noRotateCordinate2 = {
-    //         x: this.oppositePoint.x + r * Math.cos(-this.rect.deg / 180 * Math.PI),
-    //         y: this.oppositePoint.y + r * Math.sin(-this.rect.deg / 180 * Math.PI)
-    //     }
-    // }
     let left = noRotateCordinate2.x + nw * this.currentRule.w;
     let top = noRotateCordinate2.y + nh * this.currentRule.h;
-    // let { x: outX, y: outY } = this.containerRect;
     left = left - outX;
     top = top - outY;
-    console.log(left, top);
-    if((this.compData.width !== 1 && this.compData.height !== 1) || (nw !== 1 && nh !== 1)) {
+    if (
+      (this.compData.width !== 1 && this.compData.height !== 1) ||
+      (nw !== 1 && nh !== 1)
+    ) {
       this.compData.width = Math.floor(nw);
       this.compData.height = Math.floor(nh);
       this.compData.left = Math.floor(left);
       this.compData.top = Math.floor(top);
-      this.emit('resize', this.compData);
+      this.emit("resize", this.compData);
     }
-    // this.symbolVm.resizeHeight();
-
-    //TODO:: callback here...
-  }
-  // testDiv(x, y) {
-  //   let div = document.querySelector("#testDiv");
-  //   if (!div) {
-  //     div = document.createElement("div");
-  //     document.body.append(div);
-  //     div.setAttribute("id", "testDiv");
-  //     div.style.position = "absolute";
-  //     div.style.backgroundColor = "red";
-  //     div.style.width = "10px";
-  //     div.style.height = "10px";
-  //     div.style.zIndex = "999999";
-  //   }
-  //   div.style.left = `${x}px`;
-  //   div.style.top = `${y}px`;
-  // }
-  // _respoonsiveResize() { }
-
-  mouseUp = (event: { stopPropagation: () => void; preventDefault: () => void; }) => {
+  };
+  private mouseUp = (event: {
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }) => {
     _isResizing = false;
     this.responsiveResize = false;
-    // this.responsiveWidth = null;
     event.stopPropagation();
     event.preventDefault();
     document.removeEventListener("mousemove", this.mouseMove, false);
     document.removeEventListener("mouseup", this.mouseUp, false);
-    //缩放结束后 记录一次历史
-    // this.editorIns.$history.setHistory(1);
-  }
+    this.emit("resize-end");
+  };
   /**
-   *
    * 根据线上两点坐标求直线的坐标方程 y=kx+b的k值和b值（k指斜率 b指x=0时的y坐标的值）
    * 特殊的当两点坐标的x轴坐标相同时 k不存在（null）b不存在（null）但是会有一个x轴的默认值x
    * 此方法返回三个参数（k b x)分别对应上一句中的k b x
    * @param {*} linePoint1 对角线点坐标
    * @param {*} linePoint2 当前点坐标
    */
-  getSlope(linePoint1: { y: any; x: any; }, linePoint2: { x: any; y: any; }) {
+  private getSlope(
+    linePoint1: { y: any; x: any },
+    linePoint2: { x: any; y: any }
+  ) {
     let { x: x1, y: y1 } = linePoint1;
     let { x: x2, y: y2 } = linePoint2;
     let k = null;
@@ -430,9 +518,11 @@ class RotateResize extends SJEmitter {
     let x = null;
     //当斜率不存在时
     if (x2 - x1 !== 0) {
+      //直线斜率存在
       k = k = (y2 - y1) / (x2 - x1);
       b = linePoint1.y - linePoint1.x * k;
     } else {
+      //斜率不存在
       x = linePoint1.x;
     }
     return { k, b, x };
@@ -445,7 +535,10 @@ class RotateResize extends SJEmitter {
    * @param {*} pOut 线外一点
    * @param {*} lineParam 直线坐标方程的参数 k b x 对应getSlop方法返回的三个参数 k b x
    */
-  getProjectivePoint(pOut: { x?: any; y: any; }, lineParam: { k: any; b: any; x: any; }) {
+  private getProjectivePoint(
+    pOut: { x?: any; y: any },
+    lineParam: { k: any; b: any; x: any }
+  ) {
     let { k, b, x } = lineParam;
     let { x: x0, y: y0 } = pOut;
     //默认如果斜率不存在 k===null时的坐标
@@ -462,13 +555,21 @@ class RotateResize extends SJEmitter {
    * @param {*} rect
    * 以左上角为起点 方向顺时针 计算旋转deg角度后的各个点坐标
    */
-  _calcCoordinate(rect: { ox: any; oy: any; x: any; y: any; width: any; height: any; deg: any; }) {
+  private _calcCoordinate(rect: {
+    ox: any;
+    oy: any;
+    x: any;
+    y: any;
+    width: any;
+    height: any;
+    deg: any;
+  }) {
     let { x, y, ox, oy, width, height, deg } = rect;
     x += ox;
     y += oy;
     let center = {
       x: x + width / 2,
-      y: y + height / 2
+      y: y + height / 2,
     };
     //左上角旋转deg后坐标
     let origin = { x, y };
@@ -503,18 +604,21 @@ class RotateResize extends SJEmitter {
     return { points: [cp0, cp1, cp2, cp3, cp4, cp5, cp6, cp7] };
   }
   /**
-   *
-   * @param {*} current 假设坐标为(x1, y1)
-   * @param {*} center  假设坐标为(x0, y0)
-   * @param {*} deg 旋转角度
    * 极坐标变换公式
    * 已知圆上一点坐标current(x1, y1) 和圆心坐标center(x0, y0)
    * 以及旋转角度deg
    * 旋转deg角度后的坐标P(rx, ry)
    * rx = (x1-x0)*cos(deg)-(y1-y0)*sin(deg)+x0
    * ry = (y1 - y0) * cos(deg) + (x1 - x0) * sin(deg) + y0
+   * @param {*} current 假设坐标为(x1, y1)
+   * @param {*} center  假设坐标为(x0, y0)
+   * @param {*} deg 旋转角度
    */
-  _calcRotatedCordinate(current: { x: any; y: any; }, center: { x: any; y: any; }, deg: number) {
+  private _calcRotatedCordinate(
+    current: { x: any; y: any },
+    center: { x: any; y: any },
+    deg: number
+  ) {
     let rAngle = (Math.PI / 180) * deg;
     let rx =
       (current.x - center.x) * Math.cos(rAngle) -
@@ -525,6 +629,104 @@ class RotateResize extends SJEmitter {
       (current.x - center.x) * Math.sin(rAngle) +
       center.y;
     return { x: rx, y: ry };
+  }
+
+  rotate = (event: MouseEvent) => {
+    const {clientX, clientY} = event;
+    let { width, height, left, top } = this.container.getBoundingClientRect();
+      let { rotate } = this.compData;
+      this.rotateCenter = {
+        x: left + width / 2,
+        y: top + height / 2
+      };
+      this.startPos = {
+        x: clientX - this.rotateCenter.x,
+        y: clientY - this.rotateCenter.y
+      };
+      this.o_rotateDeg = rotate;
+      document.addEventListener('mousemove', this.rotating);
+      document.addEventListener('mouseup', this.rotateEnd);
+      this.emit('rotate-start');
+  }
+
+  private rotating = (event: MouseEvent) => {
+    var { pageX, pageY } = event;
+        var current = {
+          x: pageX - this.rotateCenter.x,
+          y: pageY - this.rotateCenter.y
+        };
+        var DEG_SCALE = 3;
+        var o_rotateDeg = this.o_rotateDeg;
+        var back_roateDeg = this.compData.rotate;
+        var rotateDeg = this.calcDeg(
+          current,
+          this.startPos,
+          o_rotateDeg,
+          back_roateDeg,
+          DEG_SCALE
+        );
+        this.compData.rotate = rotateDeg;
+        this.startPos = current;
+        this.emit('rotate', rotateDeg);
+  } 
+
+  private rotateEnd = (event) => {
+    document.removeEventListener('mousemove', this.rotating);
+    document.removeEventListener('mouseup', this.rotateEnd);
+    const directions = this.getCursorDirections();
+    const items = this.selectDom!.querySelectorAll('.select-item');
+    items!.forEach((item, index)=> {
+      item.classList.remove('nw-resize');
+      item.classList.remove('n-resize');
+      item.classList.remove('ne-resize');
+      item.classList.remove('e-resize');
+      item.classList.add(`${directions[index%4]}-resize`);
+    });
+    this.emit('rotate-end');
+  }
+
+  private calcDeg(current: Position, origin: Position, o_rotateDeg:number, o_backupDeg: number, deg_scale: number) {
+    let o = Math.sqrt(origin.x * origin.x + origin.y * origin.y);
+    let c = Math.sqrt(current.x * current.x + current.y * current.y);
+    let z = Math.sqrt(
+      Math.pow(current.x - origin.x, 2) + Math.pow(current.y - origin.y, 2)
+    );
+    let cosZ = (Math.pow(o, 2) + Math.pow(c, 2) - Math.pow(z, 2)) / (2 * o * c);
+    let zPI = Math.acos(cosZ);
+    let zDeg = 180 / (Math.PI / zPI);
+    //叉乘判断鼠标顺序 为负值 标识逆时针 为正值 表示顺时针
+    let crossMultiply = origin.x * current.y - origin.y * current.x;
+    let newDeg = Number(o_rotateDeg + zDeg);
+    if (crossMultiply < 0) {
+      newDeg = Number(o_rotateDeg - zDeg);
+    }
+    if (newDeg >= 360) {
+      newDeg = 0;
+    } else if (newDeg < 0) {
+      newDeg = 360 + newDeg;
+    }
+    this.o_rotateDeg = o_rotateDeg = newDeg;
+    if (o_backupDeg % 90 === 0) {
+      if (
+        o_rotateDeg >
+          (o_backupDeg === 0 ? (crossMultiply < 0 ? 360 : 0) : o_backupDeg) -
+            deg_scale &&
+        o_rotateDeg <
+          (o_backupDeg === 0 ? (crossMultiply < 0 ? 360 : 0) : o_backupDeg) +
+            deg_scale
+      ) {
+        return o_backupDeg;
+      }
+    } else {
+      if (newDeg % 90 >= 90 - deg_scale && newDeg % 90 < 90) {
+        newDeg = 90 * (Math.floor(newDeg / 90) + 1);
+      } else if (newDeg % 90 <= deg_scale && newDeg % 90 > 0) {
+        newDeg = 90 * Math.floor(newDeg / 90);
+      }
+    }
+    newDeg = Math.round(newDeg >= 360 ? 0 : newDeg);
+
+    return newDeg;
   }
 }
 
